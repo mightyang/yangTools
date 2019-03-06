@@ -1,20 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : main.py
+# File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 05.03.2019
+# Last Modified Date: 06.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
-import logging
 from PySide2 import QtWidgets, QtCore
-from src import ytOutlineWidget, ytNode, ytVariables, ytCallbacks
+from src import ytNode, ytVariables, ytCallbacks, ytLoggingSettings
+from src.ytWidgets import ytOutlineWidget
 from plugins import gangModifier
-
-yl = logging.getLogger('yangTools')
-formatter = logging.Formatter('%(acstime)s %(funcname)s[%(lineno)d] %(levelname)s: %(message)s')
-yl.setFormat(formatter)
+from src.ytLoggingSettings import yl
 
 
 class yangTools(object):
@@ -25,13 +22,8 @@ class yangTools(object):
         self.gangModifier = gangModifier.gangModifier()
         self.connectGuiSlot()
         self.connectButton()
-        self.addNukeCallback()
+        # self.addNukeCallback()
         self.addYtCallback()
-        self.getNodeTree(self.rootNode)
-
-    def stop(self):
-        self.removeNukeCallback()
-        self.gangModifier.stop()
 
     def initGui(self):
         self.outlineGui = ytOutlineWidget(self.getNukeMainWindow())
@@ -174,8 +166,7 @@ class yangTools(object):
         [i.internalPointer().setSelection(True) for i in selected.indexes()]
 
     def connectGuiSlot(self):
-        self.outlineGui.closedSignal.connect(self.removeNukeCallback)
-        self.outlineGui.closedSignal.connect(self.gangModifier.stop)
+        self.outlineGui.closedSignal.connect(self.stop)
         self.outlineGui.outlineTreeView.selectionModel().selectionChanged.connect(self.ytTreeViewSelectionCallback)
 
     def connectButton(self):
@@ -207,9 +198,15 @@ class yangTools(object):
 
     def show(self):
         self.addNukeCallback()
+        self.getNodeTree(self.rootNode)
         self.outlineGui.show()
+
+    def stop(self):
+        self.removeNukeCallback()
+        self.gangModifier.stop()
 
 
 if __name__ == '__main__':
-    t = yangTools()
-    t.show()
+    # t = yangTools()
+    # t.show()
+    pass

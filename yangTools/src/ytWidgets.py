@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : uiwidgets.py
+# File              : ytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 05.03.2019
+# Last Modified Date: 06.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
 import ytNode
 import nuke
-
+from ytLoggingSettings import yl
+import logging
 
 if nuke.NUKE_VERSION_MAJOR <= 10:
     yl.info('Nuke\' version is %s, import PySide.' % nuke.NUKE_VERSION_STRING)
@@ -30,7 +31,7 @@ class ytNodeModel(QtCore.QAbstractItemModel):
     deleteNodeSignal = QtCore.Signal(ytNode.ytNode, int)
 
     def __init__(self, root=None, parent=None):
-        super(ytNode.ytNodeModel, self).__init__(parent)
+        super(ytNodeModel, self).__init__(parent)
         yl.debug('initialize ytNode.ytNodeModel')
         self._parent = parent
         self.root = root
@@ -167,9 +168,10 @@ class ytTreeView(QtGuiWidgets.QTreeView):
         self.setSelectionMode(QtGuiWidgets.QAbstractItemView.ExtendedSelection)
 
 
-class ytLogWidget(QtGuiWidgets.QWidget):
+class ytLogWidget(QtGuiWidgets.QWidget, logging.StreamHandler):
     def __init__(self, parent=None):
         super(ytLogWidget, self).__init__(parent)
+        logging.StreamHandler.__init__(self)
         yl.debug('initialize ytLogWidget')
         self.init()
 
@@ -208,7 +210,7 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         self.logLayout = QtGuiWidgets.QVBoxLayout(self.logFrame)
         self.logWidget = ytLogWidget(self)
         self.logLayout.addWidget(self.logWidget)
-        yl.setHandler(self.logWidget)
+        yl.addHandler(logging.StreamHandler(self.logWidget))
         # toolbar
         self.toolbar = QtGuiWidgets.QToolBar(self)
         self.gangModifierButton = QtGuiWidgets.QToolButton(self)

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : pluginsgangModifiergangModifier.py
+# File              : gangModifier.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 05.03.2019
-# Last Modified Date: 05.03.2019
+# Last Modified Date: 06.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
+import logging
+import nuke
+
+yl = logging.getLogger('yangTools')
 
 class gangModifier(object):
     def __init__(self):

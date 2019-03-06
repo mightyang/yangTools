@@ -3,13 +3,12 @@
 # File              : ytNode.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 05.03.2019
+# Last Modified Date: 06.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
-import logging
+from ytLoggingSettings import yl
 from ytVariables import ytVariables
-
-yl = logging.getLogger('yangTools')
+from ytCallbacks import ytCallbacks
 
 
 class ytNode(object):
