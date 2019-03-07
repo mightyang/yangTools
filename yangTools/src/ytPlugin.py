@@ -3,13 +3,13 @@
 # File              : srcytPlugin.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 04.03.2019
+# Last Modified Date: 07.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import abc
 
 
-class ytPlugin():
+class ytPlugin:
     __metaclass__ = abc.ABCMeta
     name = 'ytPlugin'
     version = ''
@@ -40,6 +40,12 @@ class ytPlugin():
 
     def setStoppedIcon(self, icon):
         self.iconStop = icon
+
+    def getRunningIcon(self):
+        return self.iconRun
+
+    def getStoppedIcon(self):
+        return self.iconStop
 
     def startCallback(self, *args, **kwargs):
         pass

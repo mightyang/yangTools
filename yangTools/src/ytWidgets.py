@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ytWidgets.py
+# File              : srcytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 06.03.2019
+# Last Modified Date: 07.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
 import ytNode
+import sys
 import nuke
-from ytLoggingSettings import yl
-import logging
+from ytLoggingSettings import *
 
 if nuke.NUKE_VERSION_MAJOR <= 10:
     yl.info('Nuke\' version is %s, import PySide.' % nuke.NUKE_VERSION_STRING)
@@ -158,6 +158,10 @@ class ytNodeModel(QtCore.QAbstractItemModel):
         self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)
         yl.debug('after remove node selection indexes: %s' % str([a.row() for a in self._parent.selectionModel().selection().indexes()]))
 
+    def resetModel(self):
+        self.beginResetModel()
+        self.endResetModel()
+
 
 class ytTreeView(QtGuiWidgets.QTreeView):
     def __init__(self, parent=None):
@@ -168,10 +172,23 @@ class ytTreeView(QtGuiWidgets.QTreeView):
         self.setSelectionMode(QtGuiWidgets.QAbstractItemView.ExtendedSelection)
 
 
-class ytLogWidget(QtGuiWidgets.QWidget, logging.StreamHandler):
+class ytStreamHandler(logging.StreamHandler):
+    def __init__(self, widget=None):
+        super(ytStreamHandler, self).__init__()
+        self.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(filename)s %(funcName)s[%(lineno)d]: %(message)s'))
+        self.widget = widget
+
+    def emit(self, record):
+        msg = self.format(record)
+        if self.widget:
+            self.widget.append(msg.rstrip('\n'))
+        else:
+            sys.stdout(msg.rstrip('\n'))
+
+
+class ytLogWidget(QtGuiWidgets.QWidget):
     def __init__(self, parent=None):
         super(ytLogWidget, self).__init__(parent)
-        logging.StreamHandler.__init__(self)
         yl.debug('initialize ytLogWidget')
         self.init()
 
@@ -184,10 +201,6 @@ class ytLogWidget(QtGuiWidgets.QWidget, logging.StreamHandler):
         self.clearButton.clicked.connect(self.textEdit.clear)
         self.mainLayout.addWidget(self.textEdit)
         self.mainLayout.addWidget(self.clearButton)
-
-    def write(self, msg):
-        self.textEdit.append(msg.rstrip('\n'))
-        self.update()
 
 
 class ytOutlineWidget(QtGuiWidgets.QWidget):
@@ -210,7 +223,8 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         self.logLayout = QtGuiWidgets.QVBoxLayout(self.logFrame)
         self.logWidget = ytLogWidget(self)
         self.logLayout.addWidget(self.logWidget)
-        yl.addHandler(logging.StreamHandler(self.logWidget))
+        self.logHandle = ytStreamHandler(self.logWidget.textEdit)
+        yl.addHandler(self.logHandle)
         # toolbar
         self.toolbar = QtGuiWidgets.QToolBar(self)
         self.gangModifierButton = QtGuiWidgets.QToolButton(self)

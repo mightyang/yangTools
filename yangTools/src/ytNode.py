@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ytNode.py
+# File              : srcytNode.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 06.03.2019
+# Last Modified Date: 07.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
-from ytLoggingSettings import yl
+from ytLoggingSettings import *
 from ytVariables import ytVariables
 from ytCallbacks import ytCallbacks
 
@@ -85,6 +85,9 @@ class ytNode(object):
             return True
         else:
             return False
+
+    def clearChildren(self):
+        self._children = []
 
     def hasChild(self, child):
         return child in self._children

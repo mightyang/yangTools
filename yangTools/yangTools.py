@@ -3,7 +3,7 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 06.03.2019
+# Last Modified Date: 07.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
@@ -11,24 +11,26 @@ from PySide2 import QtWidgets, QtCore
 from src import ytNode, ytVariables, ytCallbacks, ytLoggingSettings
 from src.ytWidgets import ytOutlineWidget
 from plugins import gangModifier
-from src.ytLoggingSettings import yl
+from src.ytLoggingSettings import *
 
 
 class yangTools(object):
     def __init__(self):
         yl.debug('initialize yangTools')
+        self.isShow = False
         self.rootNode = ytNode.ytNode('root', nuke.root())
         self.initGui()
+        self.plugins = []
         self.gangModifier = gangModifier.gangModifier()
         self.connectGuiSlot()
         self.connectButton()
-        # self.addNukeCallback()
         self.addYtCallback()
 
     def initGui(self):
         self.outlineGui = ytOutlineWidget(self.getNukeMainWindow())
         self.outlineGui.outlineTreeView.model().setHeader(['name', 'type'])
         self.outlineGui.outlineTreeView.model().setRoot(self.rootNode)
+        self.outlineGui.logHandle.setLevel(logging.DEBUG)
 
     def getNukeMainWindow(self):
         yl.debug('get main window instance of nuke')
@@ -90,6 +92,7 @@ class yangTools(object):
 
     def nukeDestroyNodeCallback(self):
         '''the callback that called while deleting node in nuke'''
+        yl.debug('nukeDestroyNodeCallback')
         node = nuke.thisNode()
         nodePkg = self.getPkgNodeByPath(node.fullName())
         nodePkg.getParent().removeChild(nodePkg)
@@ -98,6 +101,7 @@ class yangTools(object):
         '''the callback that called while selecting node in nuke'''
         k = nuke.thisKnob()
         if k.name() == 'selected':
+            yl.debug('nukeSelectNodeCallback')
             n = nuke.thisNode()
             if ytVariables.yt_caller_isGuiCallback:
                 ytVariables.yt_caller_isGuiCallback = False
@@ -145,15 +149,6 @@ class yangTools(object):
                     self.outlineGui.outlineTreeView.selectionModel().select(modelIndex, QtCore.QItemSelectionModel.Deselect)
                 yl.debug('selection indexes: %s' % str([i.row() for i in self.outlineGui.outlineTreeView.selectionModel().selection().indexes()]))
 
-    def addYtCallback(self):
-        '''add callbacks to corresponding callback lists'''
-        yl.debug('call addYtCallback to add callback method to ytNode\'s callback lists and plugin\'s callback list')
-        ytCallbacks.ytNode_selectionChanged_callback.append((self.ytNodeSelectionCallback, ()))
-        ytCallbacks.ytNode_childCreated_callback.append((self.outlineGui.outlineTreeView.model().createNodeSignal.emit, ()))
-        ytCallbacks.ytNode_childDestroyed_callback.append((self.outlineGui.outlineTreeView.model().deleteNodeSignal.emit, ()))
-        ytCallbacks.gangModifier_start_callback.append((self.outlineGui.setGangModifierSatus, (True, )))
-        ytCallbacks.gangModifier_stop_callback.append((self.outlineGui.setGangModifierSatus, (False, )))
-
     def ytTreeViewSelectionCallback(self, selected, deselected):
         # signal loop break: gui -> ytNode -> nuke -> (break here) -> ytNode -> gui -> ...
         yl.debug('ytTreeViewSelectionCallback')
@@ -164,6 +159,15 @@ class yangTools(object):
         [i.internalPointer().setSelection(False) for i in deselected.indexes()]
         # select selected node in nuke
         [i.internalPointer().setSelection(True) for i in selected.indexes()]
+
+    def addYtCallback(self):
+        '''add callbacks to corresponding callback lists'''
+        yl.debug('call addYtCallback to add callback method to ytNode\'s callback lists and plugin\'s callback list')
+        ytCallbacks.ytNode_selectionChanged_callback.append((self.ytNodeSelectionCallback, ()))
+        ytCallbacks.ytNode_childCreated_callback.append((self.outlineGui.outlineTreeView.model().createNodeSignal.emit, ()))
+        ytCallbacks.ytNode_childDestroyed_callback.append((self.outlineGui.outlineTreeView.model().deleteNodeSignal.emit, ()))
+        ytCallbacks.gangModifier_start_callback.append((self.outlineGui.setGangModifierSatus, (True, )))
+        ytCallbacks.gangModifier_stop_callback.append((self.outlineGui.setGangModifierSatus, (False, )))
 
     def connectGuiSlot(self):
         self.outlineGui.closedSignal.connect(self.stop)
@@ -197,13 +201,19 @@ class yangTools(object):
         return None
 
     def show(self):
-        self.addNukeCallback()
-        self.getNodeTree(self.rootNode)
-        self.outlineGui.show()
+        if not self.isShow:
+            self.addNukeCallback()
+            self.getNodeTree(self.rootNode)
+            self.outlineGui.show()
+            self.isShow = True
 
     def stop(self):
-        self.removeNukeCallback()
-        self.gangModifier.stop()
+        if self.isShow:
+            self.removeNukeCallback()
+            self.rootNode.clearChildren()
+            self.outlineGui.outlineTreeView.model().resetModel()
+            self.gangModifier.stop()
+            self.isShow = False
 
 
 if __name__ == '__main__':
