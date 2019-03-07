@@ -8,15 +8,16 @@
 
 import nuke
 from PySide2 import QtWidgets, QtCore
-from src import ytNode, ytVariables, ytCallbacks, ytLoggingSettings
-from src.ytWidgets import ytOutlineWidget
+from src import ytNode, ytVariables, ytCallbacks, ytVersion
+from src.ytWidgets import ytOutlineWidget, ytPlugin
 from plugins import gangModifier
-from src.ytLoggingSettings import *
+from src.ytLoggingSettings import yl, logging
 
 
 class yangTools(object):
     def __init__(self):
         yl.debug('initialize yangTools')
+        self.version = ytVersion.ytVersion()
         self.isShow = False
         self.rootNode = ytNode.ytNode('root', nuke.root())
         self.initGui()
@@ -214,6 +215,10 @@ class yangTools(object):
             self.outlineGui.outlineTreeView.model().resetModel()
             self.gangModifier.stop()
             self.isShow = False
+
+    def regeditPlugin(self, plugin):
+        if isinstance(plugin, ytPlugin):
+            pass
 
 
 if __name__ == '__main__':
