@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : srcytNode.py
+# File              : ytNode.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 07.03.2019
+# Last Modified Date: 09.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
-from ytLoggingSettings import *
-from ytVariables import ytVariables
-from ytCallbacks import ytCallbacks
+from ytLoggingSettings import yl
+import ytVariables
+import ytCallbacks
 
 
 class ytNode(object):

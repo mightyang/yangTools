@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : srcytWidgets.py
+# File              : ytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 07.03.2019
+# Last Modified Date: 09.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
 import ytNode
 import sys
 import nuke
-from ytLoggingSettings import *
+import ytPlugin
+from ytLoggingSettings import yl, logging
 
 if nuke.NUKE_VERSION_MAJOR <= 10:
     yl.info('Nuke\' version is %s, import PySide.' % nuke.NUKE_VERSION_STRING)
@@ -203,6 +204,19 @@ class ytLogWidget(QtGuiWidgets.QWidget):
         self.mainLayout.addWidget(self.clearButton)
 
 
+class ytToolButton(QtGuiWidgets.QToolButton):
+    def __init__(self, parent=None):
+        super(ytButton, self).__init__(parent)
+        self.plugin = None
+
+    def setPlugin(self, plugin):
+        if isinstance(plugin, ytPlugin.ytRegeditPlugin):
+            self.plugin = plugin
+
+    def getPlugin(self):
+        return self.plugin
+
+
 class ytOutlineWidget(QtGuiWidgets.QWidget):
     closedSignal = QtCore.Signal()
 
@@ -214,7 +228,6 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         self.init()
 
     def init(self):
-        global yl
         self.resize(1000, 500)
         self.mainLayout = QtGuiWidgets.QVBoxLayout(self)
         self.mainSplitter = QtGuiWidgets.QSplitter(self)
@@ -227,12 +240,6 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         yl.addHandler(self.logHandle)
         # toolbar
         self.toolbar = QtGuiWidgets.QToolBar(self)
-        self.gangModifierButton = QtGuiWidgets.QToolButton(self)
-        self.gangModifierButton.setIcon(QtGui.QIcon('play.ico'))
-        self.gangModifierButton.setText('gang')
-        self.gangModifierButton.setToolTip('this is a tool that add method to nuke\'s knobChangeds callback list, so when you change knob\'s value, nuke will call this method to change the same name knob of other selected nodes synchronous')
-        self.gangModifierButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
-        self.toolbar.addWidget(self.gangModifierButton)
         # outline
         self.outlineFrame = QtGuiWidgets.QFrame(self)
         self.outlineLayout = QtGuiWidgets.QVBoxLayout(self)
@@ -248,13 +255,16 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         self.mainLayout.addWidget(self.toolbar)
         self.mainLayout.addWidget(self.mainSplitter)
 
-    def setGangModifierSatus(self, item, caller, running):
-        if running:
-            yl.debug('gangModifier is running, change icon to stop.ico')
-            self.gangModifierButton.setIcon(QtGui.QIcon('stop.ico'))
-        else:
-            yl.debug('gangModifier is stoped, change icon to play.ico')
-            self.gangModifierButton.setIcon(QtGui.QIcon('play.ico'))
+    def addPlugin(self, plugin):
+        if isinstance(plugin, ytPlugin.ytRegeditPlugin):
+            button = ytToolButton(self)
+            button.setPlugin(plugin)
+            button.setIcon(QtGui.QIcon(plugin.getIcon()))
+            button.setText(plugin.getName())
+            button.setToolTip(plugin.getTooltip())
+            button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
+            button.clicked.connect(plugin.run)
+            self.toolbar.addWidget(button)
 
     def closeEvent(self, event):
         self.closedSignal.emit()

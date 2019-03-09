@@ -40,7 +40,8 @@ class yangTools(object):
         self.outlineGui.logHandle.setLevel(logging.DEBUG)
 
     def initPlugins(self):
-        pass
+        for plugin in  self.plugins:
+            self.outlineGui.addPlugin(plugin)
 
     def getNukeMainWindow(self):
         yl.debug('get main window instance of nuke')
@@ -70,7 +71,7 @@ class yangTools(object):
         if len(ns) > 0:
             for n in ns:
                 pn = ytNode.ytNode(n.name(), n, space)
-                pn.setSelection(n['selected'].value(), ytVariables.yt_caller_nuke)
+                pn.setSelection(n['selected'].value(), ytVariables.ytCaller.yt_caller_nuke)
                 if n.Class() == 'Group':
                     self.getNodeTree(pn)
 
@@ -113,15 +114,16 @@ class yangTools(object):
         if k.name() == 'selected':
             yl.debug('nukeSelectNodeCallback')
             n = nuke.thisNode()
-            if ytVariables.yt_caller_isGuiCallback:
-                ytVariables.yt_caller_isGuiCallback = False
+            if ytVariables.ytCaller.yt_caller_isGuiCallback:
+                ytVariables.ytCaller.yt_caller_isGuiCallback = False
                 return
             yt = self.getPkgNodeByPath(n.fullName())
             if yt is not None:
-                yt.setSelection(k.value(), ytVariables.yt_caller_nuke)
+                yt.setSelection(k.value(), ytVariables.ytCaller.yt_caller_nuke)
 
     def addNukeCallback(self):
         '''add method to Nuke callback list'''
+        yl.debug('nukeAddNodeCallback')
         if '*' not in nuke.onCreates or (self.nukeCreateNodeCallback, (), {}, None) not in nuke.onCreates['*']:
             nuke.addOnCreate(self.nukeCreateNodeCallback)
         if '*' not in nuke.onDestroys or (self.nukeDestroyNodeCallback, (), {}, None) not in nuke.onDestroys['*']:
@@ -142,17 +144,17 @@ class yangTools(object):
     def ytNodeSelectionCallback(self, pNode, caller):
         '''the callback that called while selecting node in nuke or in treeView'''
         yl.debug('call ytNodeSelectionCallback to select node in nuke or in treeView')
-        if caller == ytVariables.yt_caller_gui:
+        if caller == ytVariables.ytCaller.yt_caller_gui:
             yl.debug('this is a operator in treeView, select node in nuke')
-            ytVariables.yt_caller_isGuiCallback = True
+            ytVariables.ytCaller.yt_caller_isGuiCallback = True
             pNode.getNode().setSelected(pNode.getSelection())
-        elif caller == ytVariables.yt_caller_nuke:
+        elif caller == ytVariables.ytCaller.yt_caller_nuke:
             yl.debug('this is a operator in nuke, select node in treeView')
             modelIndex = self.outlineGui.outlineTreeView.model().getIndexFromNode(pNode)
             selected = self.outlineGui.outlineTreeView.selectionModel().isSelected(modelIndex)
             yl.debug('selection status: %s[pgNode:%s] VS %s[treeview:%d %s]' % (pNode.getSelection(), pNode.getName(), selected, modelIndex.row(), self.outlineGui.outlineTreeView.model().getNodeFromIndex(modelIndex).getName()))
             if not pNode.getSelection() is selected:
-                ytVariables.yt_caller_isNukeCallback = True
+                ytVariables.ytCaller.yt_caller_isNukeCallback = True
                 if pNode.getSelection():
                     self.outlineGui.outlineTreeView.selectionModel().select(modelIndex, QtCore.QItemSelectionModel.Select)
                 else:
@@ -162,8 +164,8 @@ class yangTools(object):
     def ytTreeViewSelectionCallback(self, selected, deselected):
         # signal loop break: gui -> ytNode -> nuke -> (break here) -> ytNode -> gui -> ...
         yl.debug('ytTreeViewSelectionCallback')
-        if ytVariables.yt_caller_isNukeCallback:
-            ytVariables.yt_caller_isNukeCallback = False
+        if ytVariables.ytCaller.yt_caller_isNukeCallback:
+            ytVariables.ytCaller.yt_caller_isNukeCallback = False
             return
         # deselect deselected node in nuke
         [i.internalPointer().setSelection(False) for i in deselected.indexes()]
@@ -216,15 +218,14 @@ class yangTools(object):
             self.removeNukeCallback()
             self.rootNode.clearChildren()
             self.outlineGui.outlineTreeView.model().resetModel()
-            self.gangModifier.stop()
             self.isShow = False
 
     def addPluginPath(self, path):
         ytEnvInit.appendEnv('YT_PLUGIN_PATH', path)
 
-    def regeditPlugin(self, plugin):
+    def regeditPlugin(self, pluginName, plugin):
         if isinstance(plugin, ytPlugin):
-            pass
+            self.plugins.append(ytPlugin.ytRegeditPlugin(plugin))
 
 
 if __name__ == '__main__':
