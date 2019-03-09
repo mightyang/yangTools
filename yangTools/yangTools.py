@@ -3,28 +3,51 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 07.03.2019
+# Last Modified Date: 08.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
 from PySide2 import QtWidgets, QtCore
-from src import ytNode, ytVariables, ytCallbacks, ytVersion
-from src.ytWidgets import ytOutlineWidget, ytPlugin
-from plugins import gangModifier
+from src import ytNode, ytVariables, ytCallbacks, ytVersion, ytPlugin
+from src.ytWidgets import ytOutlineWidget
+from src.plugins import gangModifier
 from src.ytLoggingSettings import yl, logging
+import os
+import sys
+import platform
+
+# set environment sperator
+envSperator = ':'
+if platform.system() == 'Windows':
+    envSperator = ';'
+# add YT_PATH environment which is yangTool's root path
+os.environ['YT_PATH'] = os.path.dirname(os.path.abspath(__file__))
+# append YT_PATH environment value to PATH
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# add YT_PLUGIN_PATH environment, and append src/plugins which under yangTool's root path to it
+if 'YT_PLUGIN_PATH' not in os.environ:
+    os.environ['YT_PLUGIN_PATH'] = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src/plugins'))
+else:
+    os.environ['YT_PLUGIN_PATH'] += envSperator + os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src/plugins'))
+# append YT_PLUGIN_PATH value to PATH
+[sys.path.append(p) for p in os.environ['YT_PLUGIN_PATH'] if p not in sys.path]
 
 
 class yangTools(object):
     def __init__(self):
         yl.debug('initialize yangTools')
         self.version = ytVersion.ytVersion()
+        yl.debug('version of yangTools: %s' % self.version.getVersion)
         self.isShow = False
+        yl.debug('initialize root node')
         self.rootNode = ytNode.ytNode('root', nuke.root())
+        yl.debug('initialize gui of yangTools')
         self.initGui()
-        self.plugins = []
-        self.gangModifier = gangModifier.gangModifier()
-        self.connectGuiSlot()
-        self.connectButton()
+        yl.debug('initialize plugins of yangTools')
+        self.initPlugins()
+        yl.debug('connect gui\'s signal')
+        self.connectGuiSignal()
+        yl.debug('add method to ytNode\'s callback lists and plugin\'s callback list')
         self.addYtCallback()
 
     def initGui(self):
@@ -32,6 +55,9 @@ class yangTools(object):
         self.outlineGui.outlineTreeView.model().setHeader(['name', 'type'])
         self.outlineGui.outlineTreeView.model().setRoot(self.rootNode)
         self.outlineGui.logHandle.setLevel(logging.DEBUG)
+
+    def initPlugins(self):
+        pass
 
     def getNukeMainWindow(self):
         yl.debug('get main window instance of nuke')
@@ -162,20 +188,14 @@ class yangTools(object):
         [i.internalPointer().setSelection(True) for i in selected.indexes()]
 
     def addYtCallback(self):
-        '''add callbacks to corresponding callback lists'''
-        yl.debug('call addYtCallback to add callback method to ytNode\'s callback lists and plugin\'s callback list')
+        '''add methods to corresponding callback lists'''
         ytCallbacks.ytNode_selectionChanged_callback.append((self.ytNodeSelectionCallback, ()))
         ytCallbacks.ytNode_childCreated_callback.append((self.outlineGui.outlineTreeView.model().createNodeSignal.emit, ()))
         ytCallbacks.ytNode_childDestroyed_callback.append((self.outlineGui.outlineTreeView.model().deleteNodeSignal.emit, ()))
-        ytCallbacks.gangModifier_start_callback.append((self.outlineGui.setGangModifierSatus, (True, )))
-        ytCallbacks.gangModifier_stop_callback.append((self.outlineGui.setGangModifierSatus, (False, )))
 
-    def connectGuiSlot(self):
+    def connectGuiSignal(self):
         self.outlineGui.closedSignal.connect(self.stop)
         self.outlineGui.outlineTreeView.selectionModel().selectionChanged.connect(self.ytTreeViewSelectionCallback)
-
-    def connectButton(self):
-        self.outlineGui.gangModifierButton.clicked.connect(self.gangModifier.go)
 
     def getPkgNodeByPath(self, nodePkgPath=''):
         '''
@@ -215,6 +235,11 @@ class yangTools(object):
             self.outlineGui.outlineTreeView.model().resetModel()
             self.gangModifier.stop()
             self.isShow = False
+
+    def addPluginPath(self, path):
+        os.environ['YT_PLUGIN_PATH'] += envSperator + path
+        if path not in sys.path:
+            sys.path.append(path)
 
     def regeditPlugin(self, plugin):
         if isinstance(plugin, ytPlugin):

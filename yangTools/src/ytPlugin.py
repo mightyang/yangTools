@@ -3,7 +3,7 @@
 # File              : ytPlugin.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 07.03.2019
+# Last Modified Date: 08.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import abc
@@ -12,6 +12,8 @@ import ytVersion
 
 
 class ytIcon():
+    icon = {}
+
     def __init__(self, icon=None):
         self.icon['normal'] = icon
 
@@ -29,9 +31,6 @@ class ytPlugin:
     name = 'ytPlugin'
     version = ytVersion.ytVersion()
     icon = ytIcon()
-
-    def __init__(self):
-        super().__init__()
 
     @abc.abstractmethod
     def ytStart(self):
@@ -52,12 +51,6 @@ class ytPlugin:
 
     def getStoppedIcon(self):
         return self.iconStop
-
-    def addStartCallback(self, func):
-        pass
-
-    def addStopCallback(self, func):
-        pass
 
 
 class ytRegeditPlugin(object):
@@ -82,4 +75,10 @@ class ytRegeditPlugin(object):
         pass
 
     def stopCallback(self):
+        pass
+
+    def addStartCallback(self, func):
+        pass
+
+    def addStopCallback(self, func):
         pass

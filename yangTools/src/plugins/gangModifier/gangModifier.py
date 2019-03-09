@@ -3,15 +3,18 @@
 # File              : gangModifier.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 05.03.2019
-# Last Modified Date: 06.03.2019
+# Last Modified Date: 08.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import logging
 import nuke
+from src import ytPlugin
+
 
 yl = logging.getLogger('yangTools')
 
-class gangModifier(object):
+
+class gangModifier(ytPlugin):
     def __init__(self):
         yl.debug('initialize gangModifier')
         self.gangModifierRunning = False
@@ -71,29 +74,4 @@ class gangModifier(object):
 
     def isrunning(self):
         return self.gangModifierRunning
-
-    def callback(self, item, n, caller):
-        '''
-        n value:
-            0:gangModifier_start_callback
-            1:gangModifier_stop_callback
-        '''
-        if n == 0 and len(ytCallbacks.gangModifier_start_callback) > 0:
-            yl.debug('gangModifier starting callback')
-            try:
-                for c in ytCallbacks.gangModifier_start_callback:
-                    c[0](item, caller, *c[1])
-            except Exception:
-                yl.error(traceback.format_exc())
-        if n == 1 and len(ytCallbacks.gangModifier_stop_callback) > 0:
-            yl.debug('gangModifier stopping callback')
-            try:
-                for c in ytCallbacks.gangModifier_stop_callback:
-                    c[0](item, caller, *c[1])
-            except Exception:
-                yl.error(traceback.format_exc())
-
-    def compareString(self, ms, s):
-        pass
-
 
