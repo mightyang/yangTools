@@ -7,5 +7,4 @@
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 from yangTools import yangTools
-from src import ytPlugin
 __all__ = ['yangTools']

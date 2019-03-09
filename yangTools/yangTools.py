@@ -3,37 +3,20 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 08.03.2019
+# Last Modified Date: 09.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
+import ytEnvInit
 from PySide2 import QtWidgets, QtCore
-from src import ytNode, ytVariables, ytCallbacks, ytVersion, ytPlugin
-from src.ytWidgets import ytOutlineWidget
-from src.plugins import gangModifier
-from src.ytLoggingSettings import yl, logging
-import os
-import sys
-import platform
+import ytNode, ytVariables, ytCallbacks, ytVersion, ytPlugin
+from ytWidgets import ytOutlineWidget
+from ytLoggingSettings import yl, logging
 
-# set environment sperator
-envSperator = ':'
-if platform.system() == 'Windows':
-    envSperator = ';'
-# add YT_PATH environment which is yangTool's root path
-os.environ['YT_PATH'] = os.path.dirname(os.path.abspath(__file__))
-# append YT_PATH environment value to PATH
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-# add YT_PLUGIN_PATH environment, and append src/plugins which under yangTool's root path to it
-if 'YT_PLUGIN_PATH' not in os.environ:
-    os.environ['YT_PLUGIN_PATH'] = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src/plugins'))
-else:
-    os.environ['YT_PLUGIN_PATH'] += envSperator + os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src/plugins'))
-# append YT_PLUGIN_PATH value to PATH
-[sys.path.append(p) for p in os.environ['YT_PLUGIN_PATH'] if p not in sys.path]
 
 
 class yangTools(object):
+    plugins = []
     def __init__(self):
         yl.debug('initialize yangTools')
         self.version = ytVersion.ytVersion()
@@ -237,9 +220,7 @@ class yangTools(object):
             self.isShow = False
 
     def addPluginPath(self, path):
-        os.environ['YT_PLUGIN_PATH'] += envSperator + path
-        if path not in sys.path:
-            sys.path.append(path)
+        ytEnvInit.appendEnv('YT_PLUGIN_PATH', path)
 
     def regeditPlugin(self, plugin):
         if isinstance(plugin, ytPlugin):

@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : gangModifier.py
+# File              : scriptspluginsgangModifiergangModifier.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 05.03.2019
-# Last Modified Date: 08.03.2019
+# Last Modified Date: 09.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import logging
 import nuke
-from src import ytPlugin
+import ytPlugin
 
 
 yl = logging.getLogger('yangTools')
@@ -74,4 +74,5 @@ class gangModifier(ytPlugin):
 
     def isrunning(self):
         return self.gangModifierRunning
+
 
