@@ -16,5 +16,3 @@ for content in contents:
         __all__.append(content)
 
 from . import *
-
-print '-----------------------------------'

@@ -27,9 +27,10 @@ class gangModifier(ytPlugin.ytPlugin):
         self.ignoreKnobs = ['xpos', 'ypos']
         self.name = 'gangModifier'
         self.version = ytVersion.ytVersion(0, 0, 0)
+        self.help = 'used to change value of knob of selected nodes in sync\nselect nodes => open property panel of one node => change knob => knobs which have the same name of other selected node would be changed too'
         self.icon = ytPlugin.ytIcon()
-        self.icon.setIcon('icons/play.ico', ytVariables.ytIcon.ytIcon_status_stopped)
-        self.icon.setIcon('icons/stop.ico', ytVariables.ytIcon.ytIcon_status_running)
+        self.icon.setIcon('play.ico', ytVariables.ytIcon.ytIcon_status_stopped)
+        self.icon.setIcon('stop.ico', ytVariables.ytIcon.ytIcon_status_running)
 
     def ytStart(self):
         if not self.gangModifierRunning:

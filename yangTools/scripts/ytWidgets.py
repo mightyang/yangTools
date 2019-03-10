@@ -11,6 +11,7 @@ import ytNode
 import sys
 import nuke
 import ytPlugin
+import ytPlugins
 from ytLoggingSettings import yl, logging
 
 if nuke.NUKE_VERSION_MAJOR <= 10:
@@ -272,7 +273,6 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         self.closedSignal.emit()
 
     def updateIcon(self, plugin):
-        button = self.pluginButtons[self.getPluginsName.index(plugin.getName())]
+        button = self.pluginButtons[ytPlugins.getPluginsName().index(plugin.getName())]
+        yl.debug('set icon: %s' % plugin.getIcon())
         button.setIcon(QtGui.QIcon(plugin.getIcon()))
-
-

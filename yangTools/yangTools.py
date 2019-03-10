@@ -43,8 +43,8 @@ class yangTools(object):
     def initPlugin(self):
         for p in ytPlugins.plugins:
             self.outlineGui.addPlugin(p)
-            p.addStartCallback(self.outlineGui.updateIcon)
-            p.addStopCallback(self.outlineGui.updateIcon)
+            p.addStartedCallback((self.outlineGui.updateIcon, ()))
+            p.addStoppedCallback((self.outlineGui.updateIcon, ()))
 
     def getNukeMainWindow(self):
         yl.debug('get main window instance of nuke')
@@ -227,3 +227,5 @@ class yangTools(object):
         ytEnvInit.appendEnv('YT_PLUGIN_PATH', path)
         ytEnvInit.appendEnv('PATH', path)
 
+    def getPlugins(self):
+        return ytPlugins.plugins
