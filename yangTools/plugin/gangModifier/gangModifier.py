@@ -3,34 +3,53 @@
 # File              : gangModifier.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 05.03.2019
-# Last Modified Date: 09.03.2019
+# Last Modified Date: 10.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import logging
 import nuke
 import ytPlugin
-import yangTools
+import ytPlugins
 import ytVersion
 import ytVariables
 
 
 yl = logging.getLogger('yangTools')
 
-
-class gangModifier(ytPlugin):
-    name = 'gangModifier'
-    version = ytVersion(0, 0, 0)
-    icon = ytPlugin.ytIcon('icons/play.ico')
-    icon.setIcon('icons/stop.ico', ytVariables.ytIcon.ytIcon_status_running)
-
+class gangModifier(ytPlugin.ytPlugin):
     def __init__(self):
-        super(gangModifier, self).__init__()
+        ytPlugin.ytPlugin.__init__(self)
         yl.debug('initialize gangModifier')
         self.gangModifierRunning = False
         self.selectedNodes = []
         self.files = {}
         self.gangItem = None
         self.ignoreKnobs = ['xpos', 'ypos']
+        self.name = 'gangModifier'
+        self.version = ytVersion.ytVersion(0, 0, 0)
+        self.icon = ytPlugin.ytIcon()
+        self.icon.setIcon('icons/play.ico', ytVariables.ytIcon.ytIcon_status_stopped)
+        self.icon.setIcon('icons/stop.ico', ytVariables.ytIcon.ytIcon_status_running)
+
+    def ytStart(self):
+        if not self.gangModifierRunning:
+            self.selectedNodes = nuke.selectedNodes()
+            nuke.addKnobChanged(self.run)
+            self.gangModifierRunning = True
+            self.icon.setStatus(ytVariables.ytIcon.ytIcon_status_running)
+            yl.info('gangModifier is started')
+
+    def ytStop(self):
+        if self.gangModifierRunning:
+            self.selectedNodes = []
+            self.files = {}
+            nuke.removeKnobChanged(self.run)
+            self.gangModifierRunning = False
+            self.icon.setStatus(ytVariables.ytIcon.ytIcon_status_stopped)
+            yl.info('gangModifier is stoped')
+
+    def isRunning(self):
+        return self.gangModifierRunning
 
     def nodeSelected(self, node):
         yl.debug('append selected node to selected-list')
@@ -41,21 +60,6 @@ class gangModifier(ytPlugin):
         yl.debug('remove deselected node to selected-list')
         if node in self.selectedNodes:
             self.selectedNodes.remove(node)
-
-    def ytStart(self):
-        if not self.gangModifierRunning:
-            self.selectedNodes = nuke.selectedNodes()
-            nuke.addKnobChanged(self.run)
-            self.gangModifierRunning = True
-            yl.info('gangModifyer is started')
-
-    def ytStop(self):
-        if self.gangModifierRunning:
-            self.selectedNodes = []
-            self.files = {}
-            nuke.removeKnobChanged(self.run)
-            self.gangModifierRunning = False
-            yl.info('gangModifyer is stoped')
 
     def run(self):
         k = nuke.thisKnob()
@@ -73,9 +77,5 @@ class gangModifier(ytPlugin):
                     if k.name() != 'file':
                         sn[k.name()].setValue(k.value())
 
-    def isRunning(self):
-        return self.gangModifierRunning
 
-
-
-yangTools.regeditPlugin(gangModifier.name, gangModifier)
+ytPlugins.registerPlugin(gangModifier())

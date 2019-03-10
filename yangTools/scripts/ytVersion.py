@@ -3,7 +3,7 @@
 # File              : ytVersion.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 07.03.2019
-# Last Modified Date: 07.03.2019
+# Last Modified Date: 10.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
@@ -27,6 +27,4 @@ class ytVersion():
         self.patch = patch
 
     def getVersion(self):
-        return '.'.join((self.major, self.minor, self.patch))
-
-
+        return '%d.%d.%d' % (self.major, self.minor, self.patch)

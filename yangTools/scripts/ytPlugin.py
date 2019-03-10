@@ -6,7 +6,6 @@
 # Last Modified Date: 10.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
-import abc
 from ytLoggingSettings import yl
 import ytVariables
 import ytVersion
@@ -25,7 +24,7 @@ class ytIcon():
         return self.icon[ytVariables.ytIcon.ytIcon_status_stopped]
 
     def setIcon(self, icon, status):
-        if status in ytVariables.ytIcon.__dict__:
+        if status in ytVariables.ytIcon.__dict__.values():
             self.icon[status] = icon
         else:
             yl.error('TypeError: status need ytVariables.ytIcon.status')
@@ -37,30 +36,21 @@ class ytIcon():
             yl.error('TypeError: status need ytVariables.ytIcon.status')
 
 
-class ytPlugin:
-    __metaclass__ = abc.ABCMeta
-    name = 'ytPlugin'
-    version = ytVersion.ytVersion()
-    help = ''
-    icon = ytIcon()
+class ytPlugin():
+    def __init__(self):
+        self.name = 'ytPlugin'
+        self.version = ytVersion.ytVersion()
+        self.help = ''
+        self.icon = ytIcon()
 
-    @abc.abstractmethod
     def ytStart(self):
         pass
 
-    @abc.abstractmethod
     def ytStop(self):
         pass
 
-    @abc.abstractmethod
     def isRunning(self):
         pass
-
-    def getName(self):
-        return self.name
-
-    def getTooltip(self):
-        return self.help
 
 
 class ytRegeditPlugin(object):
@@ -89,26 +79,78 @@ class ytRegeditPlugin(object):
             self.plugin.icon.setStatus(ytVariables.ytIcon_status_stopped)
             self.stopedCallback()
 
+    def getName(self):
+        return self.plugin.name
+
+    def getTooltip(self):
+        return self.plugin.help
+
+    def getIcon(self):
+        return self.plugin.icon.getIcon()
+
     def startCallback(self):
-        pass
+        if len(self.startCallbackList) > 0:
+            yl.debug('startCallback of plugin: %s ' % self._name)
+            try:
+                for c in self.startCallbackList:
+                    c[0](self, *c[1])
+            except Exception as e:
+                yl.error(e.message)
 
     def startedCallback(self):
-        pass
+        if len(self.startedCallbackList) > 0:
+            yl.debug('startedCallback of plugin: %s ' % self._name)
+            try:
+                for c in self.startCallbackList:
+                    c[0](self, *c[1])
+            except Exception as e:
+                yl.error(e.message)
 
     def stopCallback(self):
-        pass
+        if len(self.stopCallbackList) > 0:
+            yl.debug('stopCallback of plugin: %s ' % self._name)
+            try:
+                for c in self.startCallbackList:
+                    c[0](self, *c[1])
+            except Exception as e:
+                yl.error(e.message)
 
     def stoppedCallback(self):
-        pass
+        if len(self.stoppedCallbackList) > 0:
+            yl.debug('stoppedCallback of plugin: %s ' % self._name)
+            try:
+                for c in self.startCallbackList:
+                    c[0](self, *c[1])
+            except Exception as e:
+                yl.error(e.message)
 
-    def addStartCallback(self, func):
-        self.startCallbackList.append(func)
+    def addStartCallback(self, func, *argvs, **kwargvs):
+        self.startCallbackList.append((func, (argvs, kwargvs)))
 
-    def addStartedCallback(self, func):
-        pass
+    def addStartedCallback(self, func, *argvs, **kwargvs):
+        self.startedCallbackList.append((func, (argvs, kwargvs)))
 
-    def addStopCallback(self, func):
-        pass
+    def addStopCallback(self, func, *argvs, **kwargvs):
+        self.stopCallbackList.append((func, (argvs, kwargvs)))
 
-    def addStoppedCallback(self, func):
-        pass
+    def addStoppedCallback(self, func, *argvs, **kwargvs):
+        self.stoppedCallbackList.append((func, (argvs, kwargvs)))
+    def removeStartCallback(self, func, *argvs, **kwargvs):
+        i = [f[0] for f in self.startCallbackList].index(func)
+        if i:
+            self.startCallbackList.pop(i)
+
+    def removeStartedCallback(self, func, *argvs, **kwargvs):
+        i = [f[0] for f in self.startedCallbackList].index(func)
+        if i:
+            self.startedCallbackList.pop(i)
+
+    def removeStopCallback(self, func, *argvs, **kwargvs):
+        i = [f[0] for f in self.stopCallbackList].index(func)
+        if i:
+            self.stopCallbackList.pop(i)
+
+    def removeStoppedCallback(self, func, *argvs, **kwargvs):
+        i = [f[0] for f in self.stoppedCallbackList].index(func)
+        if i:
+            self.stoppedCallbackList.pop(i)

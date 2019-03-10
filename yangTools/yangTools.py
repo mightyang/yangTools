@@ -3,31 +3,31 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 09.03.2019
+# Last Modified Date: 10.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
 import ytEnvInit
 from PySide2 import QtWidgets, QtCore
-import ytNode, ytVariables, ytCallbacks, ytVersion, ytPlugin
+import ytNode, ytVariables, ytCallbacks, ytVersion
 from ytWidgets import ytOutlineWidget
 from ytLoggingSettings import yl, logging
-
+import ytPlugins
+from plugin import *
 
 
 class yangTools(object):
-    plugins = []
     def __init__(self):
         yl.debug('initialize yangTools')
         self.version = ytVersion.ytVersion()
-        yl.debug('version of yangTools: %s' % self.version.getVersion)
+        yl.debug('version of yangTools: %s' % self.version.getVersion())
         self.isShow = False
         yl.debug('initialize root node')
         self.rootNode = ytNode.ytNode('root', nuke.root())
         yl.debug('initialize gui of yangTools')
         self.initGui()
-        yl.debug('initialize plugins of yangTools')
-        self.initPlugins()
+        yl.debug('initialize plugins')
+        self.initPlugin()
         yl.debug('connect gui\'s signal')
         self.connectGuiSignal()
         yl.debug('add method to ytNode\'s callback lists and plugin\'s callback list')
@@ -39,9 +39,12 @@ class yangTools(object):
         self.outlineGui.outlineTreeView.model().setRoot(self.rootNode)
         self.outlineGui.logHandle.setLevel(logging.DEBUG)
 
-    def initPlugins(self):
-        for plugin in  self.plugins:
-            self.outlineGui.addPlugin(plugin)
+
+    def initPlugin(self):
+        for p in ytPlugins.plugins:
+            self.outlineGui.addPlugin(p)
+            p.addStartCallback(self.outlineGui.updateIcon)
+            p.addStopCallback(self.outlineGui.updateIcon)
 
     def getNukeMainWindow(self):
         yl.debug('get main window instance of nuke')
@@ -220,15 +223,7 @@ class yangTools(object):
             self.outlineGui.outlineTreeView.model().resetModel()
             self.isShow = False
 
-    def addPluginPath(self, path):
+    def addPluginSearchPath(self, path):
         ytEnvInit.appendEnv('YT_PLUGIN_PATH', path)
+        ytEnvInit.appendEnv('PATH', path)
 
-    def regeditPlugin(self, pluginName, plugin):
-        if isinstance(plugin, ytPlugin):
-            self.plugins.append(ytPlugin.ytRegeditPlugin(plugin))
-
-
-if __name__ == '__main__':
-    # t = yangTools()
-    # t.show()
-    pass

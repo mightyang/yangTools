@@ -3,7 +3,7 @@
 # File              : ytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 09.03.2019
+# Last Modified Date: 10.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
@@ -206,7 +206,7 @@ class ytLogWidget(QtGuiWidgets.QWidget):
 
 class ytToolButton(QtGuiWidgets.QToolButton):
     def __init__(self, parent=None):
-        super(ytButton, self).__init__(parent)
+        super(ytToolButton, self).__init__(parent)
         self.plugin = None
 
     def setPlugin(self, plugin):
@@ -225,6 +225,7 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
         yl.debug('initialize ytOutlineWidget')
         self.setWindowFlags(QtCore.Qt.Window)
         self.setStyleSheet('QToolButton:hover {background-color:gray; border:1px;}')
+        self.pluginButtons = []
         self.init()
 
     def init(self):
@@ -265,6 +266,13 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
             button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
             button.clicked.connect(plugin.run)
             self.toolbar.addWidget(button)
+            self.pluginButtons.append(button)
 
     def closeEvent(self, event):
         self.closedSignal.emit()
+
+    def updateIcon(self, plugin):
+        button = self.pluginButtons[self.getPluginsName.index(plugin.getName())]
+        button.setIcon(QtGui.QIcon(plugin.getIcon()))
+
+

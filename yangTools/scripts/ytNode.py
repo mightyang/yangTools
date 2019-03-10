@@ -3,7 +3,7 @@
 # File              : ytNode.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 09.03.2019
+# Last Modified Date: 10.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 from ytLoggingSettings import yl
@@ -42,24 +42,24 @@ class ytNode(object):
     def __len__(self):
         return len(self._children)
 
-    def setNode(self, node, caller=ytVariables.yt_caller_gui):
+    def setNode(self, node, caller=ytVariables.ytCaller.yt_caller_gui):
         self._node = node
         self.callback(self, 3, caller)
 
-    def setParent(self, parent, caller=ytVariables.yt_caller_gui):
+    def setParent(self, parent, caller=ytVariables.ytCaller.yt_caller_gui):
         self._parent = parent
         self.callback(self, 1, caller)
         return True
 
-    def setName(self, name, caller=ytVariables.yt_caller_gui):
+    def setName(self, name, caller=ytVariables.ytCaller.yt_caller_gui):
         self.callback(self, 2, caller)
         self._name = name
 
-    def setSelection(self, selected, caller=ytVariables.yt_caller_gui):
+    def setSelection(self, selected, caller=ytVariables.ytCaller.yt_caller_gui):
         self._selected = selected
         self.callback(self, 0, caller)
 
-    def appendChild(self, child, caller=ytVariables.yt_caller_gui):
+    def appendChild(self, child, caller=ytVariables.ytCaller.yt_caller_gui):
         if not isinstance(child, ytNode):
             yl.error('TypeError: parameter child need ytNode')
         if child not in self._children:
@@ -70,13 +70,13 @@ class ytNode(object):
         else:
             yl.error('%s has exist in %s, pass' % (child.getName(), self._name))
 
-    def insertChild(self, index, child, caller=ytVariables.yt_caller_gui):
+    def insertChild(self, index, child, caller=ytVariables.ytCaller.yt_caller_gui):
         self._children.insert(index, child)
         self.callback(child, 4, caller)
         child.setParent(self)
         yl.debug('insert child: %s at %d' % (child.getName(), index))
 
-    def removeChild(self, child, caller=ytVariables.yt_caller_gui):
+    def removeChild(self, child, caller=ytVariables.ytCaller.yt_caller_gui):
         if child in self._children:
             child.setParent(None)
             self._children.remove(child)
