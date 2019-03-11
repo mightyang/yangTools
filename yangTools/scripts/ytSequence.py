@@ -33,15 +33,15 @@ class sequence():
         lists = self.optimizeList()
         l = len(lists)
         if l == 1:
-            return 'all: %d lost: 0\nlostFrames: [] existentFrames: [%d-%d]' % (len(lists[0]), lists[0][0], lists[0][-1])
+            return 'sequence: %s\nall: %d lost: 0\nlostFrames: [] existentFrames: [%d-%d]' % (self.__path, len(lists[0]), lists[0][0], lists[0][-1])
         existentFrames = ''
         lostFrames = ''
         i = 0
         while i < l-1:
-            existentFrames += '[%d-%d], ' % (l[i][0], l[i][-1])
-            lostFrames += '[%d-%d], ' % (l[i][-1], l[i+1][0])
+            existentFrames += '[%d-%d], ' % (lists[i][0], lists[i][-1])
+            lostFrames += '[%d-%d], ' % (lists[i][-1], lists[i+1][0])
             i += 1
-        existentFrames += '[%d-%d], ' % (l[i+1][0], l[i+1][-1])
+        existentFrames += '[%d-%d], ' % (lists[i][0], lists[i][-1])
 
         return 'sequence: %s\nall: %d lost: %d\nlostFrames: %s\nexistentFrames: %s' % (self.__path,  self.__last - self.__start + 1, self.__last - self.__start + 1 - len(self.__frames), lostFrames[:-2], existentFrames[:-2])
 
@@ -111,7 +111,7 @@ class sequence():
         '''
         return self.__pattern
 
-    def scan(self, resetStartAndLast=False):
+    def scan(self, resetStartAndLast=True):
         '''
         use pattern to scan files in frame range
         '''
@@ -134,11 +134,22 @@ class sequence():
             self.__last = max(self.__frames)
 
 
+
+def scanPath(path):
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    regexp = r'^(.*?)\.?(\d*)\.?(\w+)$'  # used to analize the path of sequence
+    pattern = re.compile(regexp)
+    filePatterns = []
+    filePattern = []
+    for f in files:
+        result = pattern.match(f)
+        if result:
+            result.groups()
+
+
+
 if __name__ == '__main__':
-    t = sequence()
-    t.setPath(r'\\192.168.2.3\projects\hdsh\shots\R1\CG1001\B040C006_181012_R30T.MOV.########.dpx')
-    t.scan(True)
-    print t
+    scanPath(r'/home/yang/test')
 
 
 #  def pathAnalysis(self, nodePathItem, path):
