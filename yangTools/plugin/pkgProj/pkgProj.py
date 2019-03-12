@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : pluginpkgProjpkgProj.py
+# File              : pkgProj.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 10.03.2019
-# Last Modified Date: 11.03.2019
+# Last Modified Date: 12.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import os
@@ -15,6 +15,7 @@ import sys
 import time
 import Queue
 import inspect
+from ytLoggingSettings import yl
 
 class yCallbacks(object):
     valueChangedCallback = []
@@ -37,7 +38,8 @@ class yCallbacks(object):
     spaceRootCallback = []
 
 
-searchNodes = [['Read', 'file', None, None], ['ReadGeo', 'file', None, None],
+searchNodes = [['Read', 'file', None, None],
+               ['ReadGeo', 'file', None, None],
                ['ReadGeo2', 'file', None, None],
                ['Camera', 'file', 'read_from_file', True],
                ['Camera2', 'file', 'read_from_file', True],

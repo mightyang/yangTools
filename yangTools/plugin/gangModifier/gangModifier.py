@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : plugingangModifiergangModifier.py
+# File              : gangModifier.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 05.03.2019
 # Last Modified Date: 12.03.2019
@@ -12,7 +12,6 @@ import ytPlugin
 import ytPlugins
 import ytVersion
 import ytVariables
-from PySide2 import QtWidgets
 
 
 yl = logging.getLogger('yangTools')
@@ -32,8 +31,6 @@ class gangModifier(ytPlugin.ytPlugin):
         self.icon = ytPlugin.ytIcon()
         self.icon.setIcon('play.ico', ytVariables.ytIcon.ytIcon_status_stopped)
         self.icon.setIcon('stop.ico', ytVariables.ytIcon.ytIcon_status_running)
-        self.app = QtWidgets.QApplication.instance()
-        self.cw = self.app.focusWidget()
 
     def ytStart(self):
         if not self.gangModifierRunning:
@@ -65,25 +62,10 @@ class gangModifier(ytPlugin.ytPlugin):
         if node in self.selectedNodes:
             self.selectedNodes.remove(node)
 
-    def getWidgetUntilName(self, widget, name):
-        n = widget.windowTitle()
-        if n:
-            if n.strip() == name:
-                return widget
-            else:
-                return None
-        elif widget.parent():
-            self.getWidgetUntilName(widget.parent())
-        else:
-            return None
-
     def run(self):
         k = nuke.thisKnob()
-        if self.cw != self.app.focusWidget():
-            self.cw = self.app.focusWidget()
-            if self.getWidgetUntilName(self.cw, 'Dope Sheet'):
-                return None
-
+        if ytVariables.yt_current_widget == ytVariables.yt_widget_dopesheet:
+            return None
         if k.name() in self.ignoreKnobs:
             return None
         n = nuke.thisNode()

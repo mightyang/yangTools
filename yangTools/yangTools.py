@@ -175,6 +175,7 @@ class yangTools(object):
     def connectGuiSignal(self):
         self.outlineGui.closedSignal.connect(self.stop)
         self.outlineGui.outlineTreeView.selectionModel().selectionChanged.connect(self.ytTreeViewSelectionCallback)
+        self.app.focusChanged.connect(self.setCurrentWidget)
 
     def getPkgNodeByPath(self, nodePkgPath=''):
         '''
@@ -230,3 +231,27 @@ class yangTools(object):
                 return w
         else:
             yl.error('RuntimeError: Could not find DockMainWindow instance')
+
+    def setCurrentWidget(self, old, new):
+        if self.getWidgetUntilName(new, 'Dope Sheet'):
+            yl.debug('go into Dope Sheet')
+            self.isInDopeSheet = True
+        elif self.getWidgetUntilName(old, 'Dope Sheet'):
+            yl.debug('leave Dope Sheet')
+            self.isInDopeSheet = False
+
+    def getWidgetUntilName(self, widget, name):
+        if widget:
+            while True:
+                n = widget.windowTitle()
+                pw = widget.parent()
+                if n:
+                    if n.strip() == name:
+                        return True
+                    else:
+                        return None
+                elif pw:
+                    widget = pw
+                else:
+                    return None
+

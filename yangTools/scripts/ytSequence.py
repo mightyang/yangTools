@@ -11,6 +11,7 @@
 
 import re
 import os
+import shutil
 import string
 from ytLoggingSettings import yl
 
@@ -205,6 +206,50 @@ class sequence():
                     yl.debug('rename file: {} => {}'.format(fileName, newName))
                 else:
                     yl.warning('rename failed, destination name is the same as source name')
+        else:
+            yl.error('newName format error, for example: abc.###.dpx, abc.%05d.dpx')
+
+
+    def copy(self, newName=None, newDirname=None, replace=False):
+        '''
+        copy file
+        if newName is None, keep name as source
+        if newDirname is None, just like rename
+        if replace is True, if destination path is exists, remove it, than move.
+        '''
+        # newName analize
+        if not os.path.isdir(newDirname):
+            os.mkdirs(newDirname)
+        dirname = os.path.dirname(self.__path)
+        if newDirname is None:
+            newDirname = dirname
+        if newName is None:
+            newName = os.path.basename(self.__path)
+        analizePathPattern = re.compile(self.__regex)
+        newNameResult = analizePathPattern.match(newName)
+        if newNameResult:
+            result = analizePathPattern.match(os.path.basename(self.__path))
+            for num in self.__frames:
+                fileName = ''.join((result.group(1), str(seq2num(num, result.group(2))), result.group(5)))
+                newName = ''.join((newNameResult.group(1), str(seq2num(num, newNameResult.group(2))), newNameResult.group(5)))
+                if newName != fileName or newDirname != dirname:
+                    if os.path.exists(os.path.join(newDirname, newName)):
+                        if replace:
+                            try:
+                                os.remove(os.path.join(newDirname, newName))
+                                yl.warning('destination is exists ,remove it')
+                            except Exception, e:
+                                yl.error(e.message)
+                        else:
+                            yl.warning('copy failed, destination is exists, pass')
+                            continue
+                    try:
+                        shutil.copyfile(os.path.join(dirname, fileName), os.path.join(newDirname, newName))
+                    except Exception, e:
+                        yl.error(e.message)
+                    yl.debug('copy file: {} => {}'.format(fileName, newName))
+                else:
+                    yl.warning('copy failed, destination name is the same as source name')
         else:
             yl.error('newName format error, for example: abc.###.dpx, abc.%05d.dpx')
 
