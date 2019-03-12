@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ytWidgets.py
+# File              : scriptsytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 10.03.2019
+# Last Modified Date: 12.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
@@ -265,7 +265,7 @@ class ytOutlineWidget(QtGuiWidgets.QWidget):
             button.setText(plugin.getName())
             button.setToolTip(plugin.getTooltip())
             button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
-            button.clicked.connect(plugin.run)
+            button.clicked.connect(plugin.go)
             self.toolbar.addWidget(button)
             self.pluginButtons.append(button)
 

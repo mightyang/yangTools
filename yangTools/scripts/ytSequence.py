@@ -3,7 +3,7 @@
 # File              : ytSequence.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 10.03.2019
-# Last Modified Date: 11.03.2019
+# Last Modified Date: 12.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 #  from ytLoggingSettings import yl
@@ -11,39 +11,47 @@
 
 import re
 import os
+import string
 from ytLoggingSettings import yl
 
 
 class sequence():
     '''
     path : /home/test/abc.(###|%03d).exr.
-    pattern : abc.\d+.exr <= a regexp format path
-    name : abc
+    pattern : abc.\d{3,}.exr <= a regex format path
+    prefix name : abc
     ext : exr
-    seqMark : ###
+    seqMark : ### or %03d
+    markLenth : len(###)
     '''
-    __path = ''
-    __start = 0
-    __last = 0
-    __frames = []
-    __pattern = ''
-    __regexp = r'^(.*?)\.?((#+)|%(\d*)d)\.?(\w+)$'  # used to analize the path of sequence
+
+    def __init__(self, path='', start=0, last=0, frames=[], pattern='', regex=r'^(.*?\.?)((#+)|%(\d*)d)(\.?\w+)$'):
+        self.__path = path
+        self.__start = start
+        self.__last = last
+        self.__frames = frames[:]
+        self.__pattern = pattern
+        self.__regex = regex
+        self.__seqMark = ''
 
     def __str__(self):
         lists = self.optimizeList()
-        l = len(lists)
-        if l == 1:
-            return 'sequence: %s\nall: %d lost: 0\nlostFrames: [] existentFrames: [%d-%d]' % (self.__path, len(lists[0]), lists[0][0], lists[0][-1])
-        existentFrames = ''
-        lostFrames = ''
-        i = 0
-        while i < l-1:
+        if lists:
+            l = len(lists)
+            if l == 1:
+                return 'sequence: %s\nall: %d lost: 0\nlostFrames: [] existentFrames: [%d-%d]' % (self.__path, len(lists[0]), lists[0][0], lists[0][-1])
+            existentFrames = ''
+            lostFrames = ''
+            i = 0
+            while i < l - 1:
+                existentFrames += '[%d-%d], ' % (lists[i][0], lists[i][-1])
+                lostFrames += '[%d-%d], ' % (lists[i][-1]+1, lists[i + 1][0]-1)
+                i += 1
             existentFrames += '[%d-%d], ' % (lists[i][0], lists[i][-1])
-            lostFrames += '[%d-%d], ' % (lists[i][-1], lists[i+1][0])
-            i += 1
-        existentFrames += '[%d-%d], ' % (lists[i][0], lists[i][-1])
 
-        return 'sequence: %s\nall: %d lost: %d\nlostFrames: %s\nexistentFrames: %s' % (self.__path,  self.__last - self.__start + 1, self.__last - self.__start + 1 - len(self.__frames), lostFrames[:-2], existentFrames[:-2])
+            return 'sequence: %s\nall: %d lost: %d\nlostFrames: %s\nexistentFrames: %s' % (self.__path, self.__last - self.__start + 1, self.__last - self.__start + 1 - len(self.__frames), lostFrames[:-2], existentFrames[:-2])
+        else:
+            return 'sequence: %s\nall: %d lost: 0\nlostFrames: [] existentFrames: [%d-%d]' % (self.__path, 0, 0, 0)
 
     def setPath(self, path):
         '''
@@ -55,7 +63,15 @@ class sequence():
         '''
         set sequence frames
         '''
-        self.__frames = frames
+        self.__frames = frames.sort()
+        self.__start = min(frames)
+        self.__last = max(frames)
+
+    def setPattern(self, pattern):
+        '''
+        set pattern
+        '''
+        self.__pattern = pattern
 
     def actualFrames(self):
         '''
@@ -68,6 +84,9 @@ class sequence():
 
     def last(self):
         return self.__last
+
+    def seqMark(self):
+        return self.__seqMark
 
     def frames(self):
         return self.__frames
@@ -83,21 +102,24 @@ class sequence():
         return lost
 
     def optimizeList(self):
-        frameLen = len(self.__frames)
-        if frameLen < 2:
-            return [self.__frames]
-        splittedFrame = []
-        splittedList = [self.__frames[0]]
-        i = 1
-        while i < frameLen:
-            if abs(self.__frames[i] - self.__frames[i - 1]) == 1:
-                splittedList.append(self.__frames[i])
-            else:
-                splittedFrame.append(splittedList)
-                splittedList = [self.__frames[i]]
-            i += 1
-        splittedFrame.append(splittedList)
-        return splittedFrame
+        if len(self.__frames) > 0:
+            frameLen = len(self.__frames)
+            if frameLen < 2:
+                return [self.__frames]
+            splittedFrame = []
+            splittedList = [self.__frames[0]]
+            i = 1
+            while i < frameLen:
+                if abs(self.__frames[i] - self.__frames[i - 1]) == 1:
+                    splittedList.append(self.__frames[i])
+                else:
+                    splittedFrame.append(splittedList)
+                    splittedList = [self.__frames[i]]
+                i += 1
+            splittedFrame.append(splittedList)
+            return splittedFrame
+        else:
+            yl.error('there is noting in frames, please ensure there are files in this path ,then call scan method to get frames')
 
     def path(self):
         '''
@@ -107,98 +129,142 @@ class sequence():
 
     def pattern(self):
         '''
-        return regexp pattern that matched files
+        return regex pattern that matched files
         '''
         return self.__pattern
 
-    def scan(self, resetStartAndLast=True):
+    def scan(self, files, resetStartAndLast=True):
         '''
         use pattern to scan files in frame range
         '''
-        yl.debug('start scan sequence: %s' % self.__path)
-        analizePathPattern = re.compile(self.__regexp)
-        result = analizePathPattern.match(os.path.basename(self.__path))
-        yl.debug('path pattern: %s' % str(result.groups()))
-        numLenth = (result.groups()[2] and len(result.groups()[2])) or (result.groups()[1] and ((result.groups()[3] and int(result.groups()[3])) or 1))
-        self.__pattern = result.groups()[0] + r'\.?(\d{%d,})' % numLenth + r'\.?' + result.groups()[4] + '$'
-        self.pathPattern = re.compile(self.__pattern)
-        yl.debug('file pattern: %s' % self.pathPattern.pattern)
-        for f in os.listdir(os.path.dirname(self.__path)):
-            result = self.pathPattern.match(f)
-            if result and (len(result.groups()[0]) == numLenth or len(result.groups()[0]) > numLenth and not result.groups()[0].startswith('0')):
-                self.__frames.append(int(result.groups()[0]))
-        self.__frames.sort()
+        if len(files) > 0:
+            yl.debug('start scan sequence: %s' % self.__path)
+            analizePathPattern = re.compile(self.__regex)
+            result = analizePathPattern.match(os.path.basename(self.__path))
+            self.__seqMark = result.group(2)
+            yl.debug('path pattern: %s' % str(result.groups()))
+            numLenth = (result.groups()[2] and len(result.groups()[2])) or (result.groups()[1] and ((result.groups()[3] and int(result.groups()[3])) or 1))
+            preName =re.sub(r'([%s])' % string.punctuation, r'\\\1', result.group(1))
+            self.__pattern = preName + r'\.?(\d{%d,})' % numLenth + r'\.?' + result.groups()[4] + '$'
+            yl.debug('file pattern: %s' % self.__pattern)
+            self.pathPattern = re.compile(self.__pattern)
+            i = 0
+            while i<len(files):
+                result = self.pathPattern.match(files[i])
+                if result and (len(result.groups()[0]) == numLenth or len(result.groups()[0]) > numLenth and not result.groups()[0].startswith('0')):
+                    files.pop(i)
+                    self.__frames.append(int(result.groups()[0]))
+                    continue
+                else:
+                    i+=1
+            self.__frames.sort()
 
-        if resetStartAndLast:
-            self.__start = min(self.__frames)
-            self.__last = max(self.__frames)
+            if resetStartAndLast and len(self.__frames) > 0:
+                self.__start = min(self.__frames)
+                self.__last = max(self.__frames)
+            return files
+        else:
+            yl.debug('scan files is empty')
 
+
+    def move(self, newName=None, newDirname=None, replace=False):
+        '''
+        move file
+        if newName is None, keep name as source
+        if newDirname is None, just like rename
+        if replace is True, if destination path is exists, remove it, than move.
+        '''
+        # newName analize
+        dirname = os.path.dirname(self.__path)
+        if newDirname is None:
+            newDirname = dirname
+        if newName is None:
+            newName = os.path.basename(self.__path)
+        analizePathPattern = re.compile(self.__regex)
+        newNameResult = analizePathPattern.match(newName)
+        if newNameResult:
+            result = analizePathPattern.match(os.path.basename(self.__path))
+            for num in self.__frames:
+                fileName = ''.join((result.group(1), str(seq2num(num, result.group(2))), result.group(5)))
+                newName = ''.join((newNameResult.group(1), str(seq2num(num, newNameResult.group(2))), newNameResult.group(5)))
+                if newName != fileName or newDirname != dirname:
+                    if os.path.exists(os.path.join(newDirname, newName)):
+                        if replace:
+                            try:
+                                os.remove(os.path.join(newDirname, newName))
+                                yl.warning('destination is exists ,remove it')
+                            except Exception, e:
+                                yl.error(e.message)
+                        else:
+                            yl.warning('rename failed, destination is exists, pass')
+                            continue
+                    try:
+                        os.rename(os.path.join(dirname, fileName), os.path.join(newDirname, newName))
+                    except Exception, e:
+                        yl.error(e.message)
+                    yl.debug('rename file: {} => {}'.format(fileName, newName))
+                else:
+                    yl.warning('rename failed, destination name is the same as source name')
+        else:
+            yl.error('newName format error, for example: abc.###.dpx, abc.%05d.dpx')
 
 
 def scanPath(path):
     files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-    regexp = r'^(.*?)\.?(\d*)\.?(\w+)$'  # used to analize the path of sequence
-    pattern = re.compile(regexp)
+    regex = r'^(.*?\.?)(\d*)(\.?\w+)$'  # used to analize the path of sequence
+    pattern = re.compile(regex)
     filePatterns = []
-    filePattern = []
+    seqs = []
+    #  filePattern = []
     for f in files:
         result = pattern.match(f)
         if result:
-            result.groups()
+            seqMarks = num2seq(result.group(2))
+            for sm in seqMarks:
+                compare = ''.join([result.group(1), sm, result.group(3)])
+                if compare not in filePatterns:
+                    filePatterns.append(compare)
+                else:
+                    break
+    for fp in filePatterns:
+        seq = sequence(path=os.path.join(path, fp).replace('\\', '/'))
+        files = seq.scan(files, True)
+        seqs.append(seq)
+    return seqs
 
+
+def num2seq(num):
+    if num.isdigit():
+        seqNum = []
+        if len(num) == 1:
+            seqNum.append('%d')
+        elif (len(num) > 1 and not num.startswith('0')):
+            seqNum.append('%d')
+            seqNum.append('%0{}d'.format(len(num)))
+        else:
+            seqNum.append('%0{}d'.format(len(num)))
+        return seqNum
+    else:
+        return ''
+
+def seq2num(num, seqMark):
+    if seqMark:
+        if '#' in seqMark:
+            if len(seqMark) == 1:
+                return num
+            else:
+                return '{{:>0{}d}}'.format(len(seqMark)).format(num)
+        else:
+            return seqMark % num
+    else:
+        num
 
 
 if __name__ == '__main__':
-    scanPath(r'/home/yang/test')
-
-
-#  def pathAnalysis(self, nodePathItem, path):
-#      callbackType = 4
-#      bn = os.path.basename(path)
-#      pdir = os.path.dirname(path)
-#      pattern = re.compile(r'^(.*)\.?((#+)|%(\d*)d)\.?(\w+)$')
-#      result = pattern.match(bn)
-#      if os.path.exists(path):
-#          if os.path.isdir(path):
-#              pi = pkgItem(parent=nodePathItem, value=bn, status=pkgStatus.NORMAL, itemtype=pkgItemType.DIR, count=1)
-#              pi.setDirPath(pdir)
-#              yl.debug('create dir: %s' % pi.getValue())
-#          else:
-#              pi = pkgItem(parent=nodePathItem, value=bn, status=pkgStatus.NORMAL, itemtype=pkgItemType.FILE, count=1)
-#              pi.setDirPath(pdir)
-#              yl.debug('create file: %s' % pi.getValue())
-#          self.callback(pi, callbackType)
-#          nodePathItem.appendItem(pi)
-#      elif not os.path.exists(pdir):
-#          pi = pkgItem(parent=nodePathItem, value=bn, status=pkgStatus.NOEXISTS, itemtype=pkgItemType.FILE)
-#          pi.setDirPath(pdir)
-#          self.callback(pi, callbackType)
-#          yl.debug('create do not exist file: %s' % pi.getValue())
-#          nodePathItem.appendItem(pi)
-#      elif result:
-#          yl.debug('this is a sequence analysis')
-#          numLenth = (result.groups()[2] and len(result.groups()[2])) or (result.groups()[1] and ((result.groups()[3] and int(result.groups()[3])) or 1))
-#          if result:
-#              fn = 0
-#              newPattern = re.compile(result.groups()[0] + r'\.?(\d{%d,})' % numLenth + r'\.?' + result.groups()[4] + '$')
-#              for obj in os.listdir(pdir):
-#                  result = newPattern.match(obj)
-#                  if result and (len(result.groups()[0]) == numLenth or len(result.groups()[0]) > numLenth and not result.groups()[0].startswith('0')):
-#                      pi = pkgItem(parent=nodePathItem, value=obj, status=pkgStatus.NORMAL, itemtype=pkgItemType.FILE, count=1, pos=fn)
-#                      pi.setDirPath(pdir)
-#                      yl.debug('create a file from sequence: %s' % pi.getValue())
-#                      self.callback(pi, callbackType)
-#                      nodePathItem.appendItem(pi)
-#                      fn += 1
-#          if fn == 0:
-#              pi = pkgItem(parent=nodePathItem, value=bn, status=pkgStatus.NOEXISTS, itemtype=pkgItemType.FILE, count=0)
-#              pi.setDirPath(pdir)
-#              yl.debug('create do not exist file: %s' % pi.getValue())
-#              self.callback(pi, callbackType)
-#              nodePathItem.appendItem(pi)
-#      else:
-#          pi = pkgItem(parent=nodePathItem, value=bn, status=pkgStatus.NOEXISTS, itemtype=pkgItemType.FILE, count=0)
-#          pi.setDirPath(pdir)
-#          yl.debug('create do not exist file: %s' % pi.getValue())
-#          self.callback(pi, callbackType)
-#          nodePathItem.appendItem(pi)
+    #  seqs = scanPath(r'e:\CG1001')
+    #  for seq in seqs:
+    #      seq.rename('test')
+    path = 'E:/CG1001/abc.#.dpx'
+    test = sequence(path=path)
+    test.scan(os.listdir(os.path.dirname(path)), True)
+    test.move(newDirname='E:/CG1001/abc', replace=True)

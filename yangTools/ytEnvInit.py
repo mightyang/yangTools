@@ -37,9 +37,6 @@ def updateEnv():
     if 'YT_SCRIPT_PATH' in os.environ:
         ytPluginPathList = os.environ['YT_SCRIPT_PATH'].split(envSperator)
         ppList.extend(ytPluginPathList)
-    if 'YT_DATA_PATH' in os.environ:
-        ytDataPathList = os.environ['YT_DATA_PATH'].split(envSperator)
-        ppList.extend(ytDataPathList)
     if 'YT_ICON_PATH' in os.environ:
         ytDataPathList = os.environ['YT_ICON_PATH'].split(envSperator)
         ppList.extend(ytDataPathList)
@@ -49,7 +46,6 @@ def updateEnv():
 # add YT_PATH environment which is yangTool's root path
 preEnv = {'YT_PATH': os.path.dirname(os.path.abspath(__file__)),
           'YT_SCRIPT_PATH': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts'),
-          'YT_DATA_PATH': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data'),
           'YT_ICON_PATH': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'icons')
           }
 

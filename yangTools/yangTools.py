@@ -3,7 +3,7 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 10.03.2019
+# Last Modified Date: 12.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
@@ -45,15 +45,6 @@ class yangTools(object):
             self.outlineGui.addPlugin(p)
             p.addStartedCallback((self.outlineGui.updateIcon, ()))
             p.addStoppedCallback((self.outlineGui.updateIcon, ()))
-
-    def getNukeMainWindow(self):
-        yl.debug('get main window instance of nuke')
-        self.app = QtWidgets.QApplication.instance()
-        for w in self.app.topLevelWidgets():
-            if w.inherits('QMainWindow') and w.metaObject().className() == 'Foundry::UI::DockMainWindow':
-                return w
-        else:
-            yl.error('RuntimeError: Could not find DockMainWindow instance')
 
     def getNodePath(self, node):
         path = node.getName()
@@ -221,6 +212,7 @@ class yangTools(object):
             self.removeNukeCallback()
             self.rootNode.clearChildren()
             self.outlineGui.outlineTreeView.model().resetModel()
+            [p.go() for p in ytPlugins.plugins]
             self.isShow = False
 
     def addPluginSearchPath(self, path):
@@ -229,3 +221,12 @@ class yangTools(object):
 
     def getPlugins(self):
         return ytPlugins.plugins
+
+    def getNukeMainWindow(self):
+        yl.debug('get main window instance of nuke')
+        self.app = QtWidgets.QApplication.instance()
+        for w in self.app.topLevelWidgets():
+            if w.inherits('QMainWindow') and w.metaObject().className() == 'Foundry::UI::DockMainWindow':
+                return w
+        else:
+            yl.error('RuntimeError: Could not find DockMainWindow instance')

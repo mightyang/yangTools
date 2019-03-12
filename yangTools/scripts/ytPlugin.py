@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ytPlugin.py
+# File              : scriptsytPlugin.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 10.03.2019
+# Last Modified Date: 12.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 from ytLoggingSettings import yl
@@ -89,7 +89,7 @@ class ytRegeditPlugin(object):
         self.stopCallbackList = []
         self.stoppedCallbackList = []
 
-    def run(self):
+    def go(self):
         if not self.plugin.isRunning():
             try:
                 self.startCallback()
