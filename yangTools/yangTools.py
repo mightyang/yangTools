@@ -3,7 +3,7 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 12.03.2019
+# Last Modified Date: 13.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
@@ -213,7 +213,7 @@ class yangTools(object):
             self.removeNukeCallback()
             self.rootNode.clearChildren()
             self.outlineGui.outlineTreeView.model().resetModel()
-            [p.go() for p in ytPlugins.plugins]
+            [p.stop() for p in ytPlugins.plugins]
             self.isShow = False
 
     def addPluginSearchPath(self, path):
@@ -233,25 +233,20 @@ class yangTools(object):
             yl.error('RuntimeError: Could not find DockMainWindow instance')
 
     def setCurrentWidget(self, old, new):
-        if self.getWidgetUntilName(new, 'Dope Sheet'):
-            yl.debug('go into Dope Sheet')
-            self.isInDopeSheet = True
-        elif self.getWidgetUntilName(old, 'Dope Sheet'):
-            yl.debug('leave Dope Sheet')
-            self.isInDopeSheet = False
-
-    def getWidgetUntilName(self, widget, name):
-        if widget:
+        if new:
+            w = new
             while True:
-                n = widget.windowTitle()
-                pw = widget.parent()
+                n = w.windowTitle()
+                pw = w.parent()
                 if n:
-                    if n.strip() == name:
-                        return True
-                    else:
-                        return None
+                    if n in ytVariables.ytNukeWidgets.yt_widgets:
+                        ytVariables.ytNukeWidgets.yt_current_widget = n
+                        yl.debug('go into {}'.format(n))
+                    elif 'Viewer' in n:
+                        ytVariables.ytNukeWidgets.yt_current_widget = 'Viewer'
+                        yl.debug('go into {}'.format(n))
+                    return None
                 elif pw:
-                    widget = pw
+                    w = pw
                 else:
                     return None
-

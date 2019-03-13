@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : gangModifier.py
+# File              : plugingangModifiergangModifier.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 05.03.2019
-# Last Modified Date: 12.03.2019
+# Last Modified Date: 13.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import logging
@@ -25,6 +25,7 @@ class gangModifier(ytPlugin.ytPlugin):
         self.files = {}
         self.gangItem = None
         self.ignoreKnobs = ['xpos', 'ypos']
+        self.executable = [nuke.Script_Knob, nuke.PyCustom_Knob, nuke.PyScript_Knob, nuke.PythonCustomKnob]
         self.name = 'gangModifier'
         self.version = ytVersion.ytVersion(0, 0, 0)
         self.help = 'used to change value of knob of selected nodes in sync\nselect nodes => open property panel of one node => change knob => knobs which have the same name of other selected node would be changed too'
@@ -64,21 +65,23 @@ class gangModifier(ytPlugin.ytPlugin):
 
     def run(self):
         k = nuke.thisKnob()
-        if ytVariables.yt_current_widget == ytVariables.yt_widget_dopesheet:
-            return None
-        if k.name() in self.ignoreKnobs:
-            return None
         n = nuke.thisNode()
+        yl.debug('{}["{}"] changed'.format(n.name(), k.name()))
+        if ytVariables.ytNukeWidgets.yt_current_widget == ytVariables.ytNukeWidgets.yt_widgets[2]:
+            return None
+        if k.name() in self.ignoreKnobs or k.name() not in n.knobs():
+            return None
         if k.name() == 'selected':
             if k.value():
                 self.nodeSelected(n)
             else:
                 self.nodeDeselected(n)
+        elif k.name() == 'file':
+            pass
         else:
             for sn in self.selectedNodes:
                 if sn.name() != n.name():
-                    if k.name() != 'file':
-                        sn[k.name()].setValue(k.value())
+                    sn[k.name()].setValue(k.value())
 
 
 ytPlugins.registerPlugin(gangModifier())

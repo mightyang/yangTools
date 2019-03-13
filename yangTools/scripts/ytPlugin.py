@@ -3,7 +3,7 @@
 # File              : scriptsytPlugin.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 12.03.2019
+# Last Modified Date: 13.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 from ytLoggingSettings import yl
@@ -104,6 +104,14 @@ class ytRegeditPlugin(object):
                 self.stoppedCallback()
             except Exception, e:
                 yl.error(e.message)
+
+    def stop(self):
+        try:
+            self.stopCallback()
+            self.plugin.ytStop()
+            self.stoppedCallback()
+        except Exception, e:
+            yl.error(e.message)
 
     def getName(self):
         return self.plugin.name
