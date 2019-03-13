@@ -24,16 +24,13 @@ class yangTools(object):
         self.isShow = False
         yl.debug('initialize root node')
         self.rootNode = ytNode.ytNode('root', nuke.root())
-        yl.debug('initialize gui of yangTools')
         self.initGui()
-        yl.debug('initialize plugins')
         self.initPlugin()
-        yl.debug('connect gui\'s signal')
         self.connectGuiSignal()
-        yl.debug('add method to ytNode\'s callback lists and plugin\'s callback list')
         self.addYtCallback()
 
     def initGui(self):
+        yl.debug('initialize gui of yangTools')
         self.outlineGui = ytOutlineWidget(self.getNukeMainWindow())
         self.outlineGui.outlineTreeView.model().setHeader(['name', 'type'])
         self.outlineGui.outlineTreeView.model().setRoot(self.rootNode)
@@ -41,12 +38,14 @@ class yangTools(object):
 
 
     def initPlugin(self):
+        yl.debug('initialize plugins')
         for p in ytPlugins.plugins:
             self.outlineGui.addPlugin(p)
             p.addStartedCallback((self.outlineGui.updateIcon, ()))
             p.addStoppedCallback((self.outlineGui.updateIcon, ()))
 
     def getNodePath(self, node):
+        yl.debug('get node path')
         path = node.getName()
         while True:
             parent = node.getParent()
@@ -70,6 +69,7 @@ class yangTools(object):
                     self.getNodeTree(pn)
 
     def printNodeTree(self, space=None, level=0):
+        yl.debug('print node tree')
         if space is None:
             space = self.rootNode
             print '\nroot'
@@ -93,20 +93,23 @@ class yangTools(object):
         else:
             parent = self.getPkgNodeByPath('.'.join(node.fullName().split('.')[:-1]))
         if parent is not None:
-            ytNode.ytNode(node.name(), node, parent)
+            yn = ytNode.ytNode(node.name(), node, parent)
+            yn.setSelection(True, ytVariables.ytCaller.yt_caller_nuke)
 
     def nukeDestroyNodeCallback(self):
         '''the callback that called while deleting node in nuke'''
-        yl.debug('nukeDestroyNodeCallback')
+        yl.debug('nukeDestroyNodeCallback begin')
         node = nuke.thisNode()
-        nodePkg = self.getPkgNodeByPath(node.fullName())
-        nodePkg.getParent().removeChild(nodePkg)
+        yn = self.getPkgNodeByPath(node.fullName())
+        yn.setSelection(False , ytVariables.ytCaller.yt_caller_nuke)
+        yn.getParent().removeChild(yn)
+        yl.debug('nukeDestroyNodeCallback end')
 
     def nukeSelectionCallback(self):
         '''the callback that called while selecting node in nuke'''
+        yl.debug('nukeSelectNodeCallback')
         k = nuke.thisKnob()
         if k.name() == 'selected':
-            yl.debug('nukeSelectNodeCallback')
             n = nuke.thisNode()
             if ytVariables.ytCaller.yt_caller_isGuiCallback:
                 ytVariables.ytCaller.yt_caller_isGuiCallback = False
@@ -137,23 +140,20 @@ class yangTools(object):
 
     def ytNodeSelectionCallback(self, pNode, caller):
         '''the callback that called while selecting node in nuke or in treeView'''
-        yl.debug('call ytNodeSelectionCallback to select node in nuke or in treeView')
         if caller == ytVariables.ytCaller.yt_caller_gui:
-            yl.debug('this is a operator in treeView, select node in nuke')
+            yl.debug('call ytNodeSelectionCallback to select node in nuke')
             ytVariables.ytCaller.yt_caller_isGuiCallback = True
             pNode.getNode().setSelected(pNode.getSelection())
         elif caller == ytVariables.ytCaller.yt_caller_nuke:
-            yl.debug('this is a operator in nuke, select node in treeView')
+            yl.debug('call ytNodeSelectionCallback to select node in treeView')
             modelIndex = self.outlineGui.outlineTreeView.model().getIndexFromNode(pNode)
             selected = self.outlineGui.outlineTreeView.selectionModel().isSelected(modelIndex)
-            yl.debug('selection status: %s[pgNode:%s] VS %s[treeview:%d %s]' % (pNode.getSelection(), pNode.getName(), selected, modelIndex.row(), self.outlineGui.outlineTreeView.model().getNodeFromIndex(modelIndex).getName()))
             if not pNode.getSelection() is selected:
                 ytVariables.ytCaller.yt_caller_isNukeCallback = True
                 if pNode.getSelection():
                     self.outlineGui.outlineTreeView.selectionModel().select(modelIndex, QtCore.QItemSelectionModel.Select)
                 else:
                     self.outlineGui.outlineTreeView.selectionModel().select(modelIndex, QtCore.QItemSelectionModel.Deselect)
-                yl.debug('selection indexes: %s' % str([i.row() for i in self.outlineGui.outlineTreeView.selectionModel().selection().indexes()]))
 
     def ytTreeViewSelectionCallback(self, selected, deselected):
         # signal loop break: gui -> ytNode -> nuke -> (break here) -> ytNode -> gui -> ...
@@ -168,11 +168,13 @@ class yangTools(object):
 
     def addYtCallback(self):
         '''add methods to corresponding callback lists'''
+        yl.debug('add method to ytNode\'s callback lists and plugin\'s callback list')
         ytCallbacks.ytNode_selectionChanged_callback.append((self.ytNodeSelectionCallback, ()))
         ytCallbacks.ytNode_childCreated_callback.append((self.outlineGui.outlineTreeView.model().createNodeSignal.emit, ()))
         ytCallbacks.ytNode_childDestroyed_callback.append((self.outlineGui.outlineTreeView.model().deleteNodeSignal.emit, ()))
 
     def connectGuiSignal(self):
+        yl.debug('connect gui\'s signal')
         self.outlineGui.closedSignal.connect(self.stop)
         self.outlineGui.outlineTreeView.selectionModel().selectionChanged.connect(self.ytTreeViewSelectionCallback)
         self.app.focusChanged.connect(self.setCurrentWidget)
@@ -182,9 +184,9 @@ class yangTools(object):
         used by root ytNode
         nodePath is node fullName in nuke, getted by node.fullName()
         '''
+        yl.debug('get ytNode by path: %s' % nodePkgPath)
         if not isinstance(nodePkgPath, str):
-            yl.error(
-                'TypeError: parameter need string, getted by node.fullName() in nuke')
+            yl.error('TypeError: parameter need string, getted by node.fullName() in nuke')
             return None
         if nodePkgPath == '':
             return self.rootNode
@@ -202,6 +204,7 @@ class yangTools(object):
         return None
 
     def show(self):
+        yl.debug('show yangTools')
         if not self.isShow:
             self.addNukeCallback()
             self.getNodeTree(self.rootNode)
@@ -209,6 +212,7 @@ class yangTools(object):
             self.isShow = True
 
     def stop(self):
+        yl.debug('stop yangTools')
         if self.isShow:
             self.removeNukeCallback()
             self.rootNode.clearChildren()
@@ -217,10 +221,12 @@ class yangTools(object):
             self.isShow = False
 
     def addPluginSearchPath(self, path):
+        yl.debug('add plugin search path')
         ytEnvInit.appendEnv('YT_PLUGIN_PATH', path)
         ytEnvInit.appendEnv('PATH', path)
 
     def getPlugins(self):
+        yl.debug('get plugins')
         return ytPlugins.plugins
 
     def getNukeMainWindow(self):

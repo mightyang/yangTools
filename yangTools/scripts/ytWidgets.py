@@ -3,7 +3,7 @@
 # File              : scriptsytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 12.03.2019
+# Last Modified Date: 13.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
@@ -43,8 +43,8 @@ class ytNodeModel(QtCore.QAbstractItemModel):
         self.deleteNodeSignal.connect(self.deleteNode)
 
     def setRoot(self, root):
+        yl.debug('set root')
         if isinstance(root, ytNode.ytNode):
-            yl.debug('set ytNodeMode\'s root: %s' % root.getName())
             self.root = root
         else:
             yl.error('TypeError: ytNodeMode\'s root need ytNode')
@@ -104,7 +104,7 @@ class ytNodeModel(QtCore.QAbstractItemModel):
         self.beginInsertRows(parent, row, row + count - 1)
         if parent.isValid():
             pn = self.getNodeFromIndex(parent)
-            pn.appendChildren([ytNode.ytNode(), ytNode.ytNode(), ytNode.ytNode(), ytNode.ytNode(), ])
+            pn.appendChildren([ytNode.ytNode() for i in range(count)])
         self.endInsertRows()
         return True
 
@@ -115,6 +115,7 @@ class ytNodeModel(QtCore.QAbstractItemModel):
             return self.root
 
     def getIndexFromNode(self, pNode):
+        yl.debug('get index from node')
         pNodeFullIndex = pNode.getFullIndex()
         modelIndex = QtCore.QModelIndex()
         if pNodeFullIndex is not None:
@@ -130,35 +131,26 @@ class ytNodeModel(QtCore.QAbstractItemModel):
         yl.debug('create node in treeview')
         parent = node.getParent()
         if parent is not None:
-            yl.debug('parent is %s' % parent.getName())
             parentIndex = self.getIndexFromNode(parent)
             i = node.getIndex()
-            selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
-            yl.debug('store selection indexes: %s' % str([a.row() for a in selection.indexes()]))
-            yl.debug('before insert node selection indexes: %s' % str([a.row() for a in self._parent.selectionModel().selection().indexes()]))
+            #  selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
             self.beginInsertRows(parentIndex, i, i)
             if parentIndex.isValid():
                 self.insertRow(i, parentIndex)
             else:
                 self.insertRow(i, QtCore.QModelIndex())
-            yl.debug('insert item %s in parent: %s at row %d' % (node.getName(), parent.getName(), i))
-            yl.debug('between insert node selection indexes: %s' % str([a.row() for a in self._parent.selectionModel().selection().indexes()]))
             self.endInsertRows()
-            self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)
-            yl.debug('after insert node selection indexes: %s' % str([a.row() for a in self._parent.selectionModel().selection().indexes()]))
+            #  self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)
 
     def deleteNode(self, node, caller):
         yl.debug('treeview delete node')
         index = self.getIndexFromNode(node)
-        selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
-        yl.debug('store selection indexes: %s' % str([a.row() for a in selection.indexes()]))
-        yl.debug('before remove node selection indexes: %s' % str([a.row() for a in self._parent.selectionModel().selection().indexes()]))
+        #  selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
         self.beginRemoveRows(index.parent(), index.row(), index.row())
         if index.isValid():
             self.removeRow(index.row(), self.parent(index))
         self.endRemoveRows()
-        self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)
-        yl.debug('after remove node selection indexes: %s' % str([a.row() for a in self._parent.selectionModel().selection().indexes()]))
+        #  self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)
 
     def resetModel(self):
         self.beginResetModel()

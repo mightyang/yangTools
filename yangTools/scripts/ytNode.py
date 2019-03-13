@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ytNode.py
+# File              : scriptsytNode.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 10.03.2019
+# Last Modified Date: 13.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 from ytLoggingSettings import yl
@@ -66,7 +66,6 @@ class ytNode(object):
             self._children.append(child)
             self.callback(child, 4, caller)
             child.setParent(self)
-            yl.debug('append child: %s' % child.getName())
         else:
             yl.error('%s has exist in %s, pass' % (child.getName(), self._name))
 
@@ -74,14 +73,12 @@ class ytNode(object):
         self._children.insert(index, child)
         self.callback(child, 4, caller)
         child.setParent(self)
-        yl.debug('insert child: %s at %d' % (child.getName(), index))
 
     def removeChild(self, child, caller=ytVariables.ytCaller.yt_caller_gui):
         if child in self._children:
             child.setParent(None)
-            self._children.remove(child)
             self.callback(child, 5, caller)
-            yl.debug('remove child: %s' % child.getName())
+            self._children.remove(child)
             return True
         else:
             return False
@@ -132,6 +129,7 @@ class ytNode(object):
             return 0
 
     def getFullIndex(self):
+        yl.debug('get full index')
         if self._parent is not None and self in self._parent.getChildren():
             fullIndex = []
             child = self
@@ -151,42 +149,36 @@ class ytNode(object):
             4: ytNode_childrenChanged_callback
         '''
         if n == 0 and len(ytCallbacks.ytNode_selectionChanged_callback) > 0:
-            yl.debug('ytNode: %s selection changed callback' % self._name)
             try:
                 for c in ytCallbacks.ytNode_selectionChanged_callback:
                     c[0](item, caller, *c[1])
             except Exception as e:
                 yl.error(e.message)
         if n == 1 and len(ytCallbacks.ytNode_parentChanged_callback) > 0:
-            yl.debug('ytNode: %s parent changed callback' % self._name)
             try:
                 for c in ytCallbacks.ytNode_parentChanged_callback:
                     c[0](item, caller, *c[1])
             except Exception as e:
                 yl.error(e.message)
         if n == 2 and len(ytCallbacks.ytNode_nameChanged_callback) > 0:
-            yl.debug('ytNode: %s name changed callback' % self._name)
             try:
                 for c in ytCallbacks.ytNode_nameChanged_callback:
                     c[0](item, caller, *c[1])
             except Exception as e:
                 yl.error(e.message)
         if n == 3 and len(ytCallbacks.ytNode_nodeChanged_callback) > 0:
-            yl.debug('ytNode: %s node changed callback' % self._name)
             try:
                 for c in ytCallbacks.ytNode_nodeChanged_callback:
                     c[0](item, caller, *c[1])
             except Exception as e:
                 yl.error(e.message)
         if n == 4 and len(ytCallbacks.ytNode_childCreated_callback) > 0:
-            yl.debug('ytNode: child %s created callback' % self._name)
             try:
                 for c in ytCallbacks.ytNode_childCreated_callback:
                     c[0](item, caller, *c[1])
             except Exception as e:
                 yl.error(e.message)
         if n == 5 and len(ytCallbacks.ytNode_childDestroyed_callback) > 0:
-            yl.debug('ytNode: child %s deleted callback' % self._name)
             try:
                 for c in ytCallbacks.ytNode_childDestroyed_callback:
                     c[0](item, caller, *c[1])

@@ -54,19 +54,16 @@ class gangModifier(ytPlugin.ytPlugin):
         return self.gangModifierRunning
 
     def nodeSelected(self, node):
-        yl.debug('append selected node to selected-list')
         if node not in self.selectedNodes:
             self.selectedNodes.append(node)
 
     def nodeDeselected(self, node):
-        yl.debug('remove deselected node to selected-list')
         if node in self.selectedNodes:
             self.selectedNodes.remove(node)
 
     def run(self):
         k = nuke.thisKnob()
         n = nuke.thisNode()
-        yl.debug('{}["{}"] changed'.format(n.name(), k.name()))
         if ytVariables.ytNukeWidgets.yt_current_widget == ytVariables.ytNukeWidgets.yt_widgets[2]:
             return None
         if k.name() in self.ignoreKnobs or k.name() not in n.knobs():

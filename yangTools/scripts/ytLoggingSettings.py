@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : srcytLoggingSettings.py
+# File              : scriptsytLoggingSettings.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 06.03.2019
-# Last Modified Date: 07.03.2019
+# Last Modified Date: 13.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import logging
