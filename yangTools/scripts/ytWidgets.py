@@ -3,7 +3,7 @@
 # File              : scriptsytWidgets.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 13.03.2019
+# Last Modified Date: 14.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 
@@ -92,21 +92,23 @@ class ytNodeModel(QtCore.QAbstractItemModel):
     def flags(self, index):
         return (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
 
-    def removeRows(self, row, count, parent):
-        self.beginRemoveRows(parent, row, row + count - 1)
-        if parent.isValid():
-            parentPkg = self.getNodeFromIndex(parent)
-            parentPkg.removeChildren(row, count)
-        self.endRmoveRows()
-        return True
+    #  def removeRows(self, row, count, parent):
+    #      yl.debug('remove rows')
+    #      self.beginRemoveRows(parent, row, row + count - 1)
+    #      if parent.isValid():
+    #          parentPkg = self.getNodeFromIndex(parent)
+    #          parentPkg.removeChildren(row, count)
+    #      self.endRmoveRows()
+    #      return True
 
-    def insertRows(self, row, count, parent):
-        self.beginInsertRows(parent, row, row + count - 1)
-        if parent.isValid():
-            pn = self.getNodeFromIndex(parent)
-            pn.appendChildren([ytNode.ytNode() for i in range(count)])
-        self.endInsertRows()
-        return True
+    #  def insertRows(self, row, count, parent):
+    #      yl.debug('insert rows')
+    #      self.beginInsertRows(parent, row, row + count - 1)
+    #      if parent.isValid():
+    #          pn = self.getNodeFromIndex(parent)
+    #          pn.appendChildren([ytNode.ytNode() for i in range(count)])
+    #      self.endInsertRows()
+    #      return True
 
     def getNodeFromIndex(self, index):
         if index.isValid():
@@ -148,6 +150,8 @@ class ytNodeModel(QtCore.QAbstractItemModel):
         #  selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
         self.beginRemoveRows(index.parent(), index.row(), index.row())
         if index.isValid():
+            #  self._parent.selectionModel().select(index, QtCore.QItemSelectionModel.Deselect)
+            yl.debug('remove index: %d' % index.row())
             self.removeRow(index.row(), self.parent(index))
         self.endRemoveRows()
         #  self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)

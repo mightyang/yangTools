@@ -3,7 +3,7 @@
 # File              : yangTools.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 31.12.2018
-# Last Modified Date: 13.03.2019
+# Last Modified Date: 14.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 import nuke
@@ -94,22 +94,21 @@ class yangTools(object):
             parent = self.getPkgNodeByPath('.'.join(node.fullName().split('.')[:-1]))
         if parent is not None:
             yn = ytNode.ytNode(node.name(), node, parent)
-            yn.setSelection(True, ytVariables.ytCaller.yt_caller_nuke)
+            yn.setSelection(node['selected'].value(), ytVariables.ytCaller.yt_caller_nuke)
 
     def nukeDestroyNodeCallback(self):
         '''the callback that called while deleting node in nuke'''
         yl.debug('nukeDestroyNodeCallback begin')
         node = nuke.thisNode()
         yn = self.getPkgNodeByPath(node.fullName())
-        yn.setSelection(False , ytVariables.ytCaller.yt_caller_nuke)
         yn.getParent().removeChild(yn)
         yl.debug('nukeDestroyNodeCallback end')
 
     def nukeSelectionCallback(self):
         '''the callback that called while selecting node in nuke'''
-        yl.debug('nukeSelectNodeCallback')
         k = nuke.thisKnob()
         if k.name() == 'selected':
+            yl.debug('nukeSelectNodeCallback')
             n = nuke.thisNode()
             if ytVariables.ytCaller.yt_caller_isGuiCallback:
                 ytVariables.ytCaller.yt_caller_isGuiCallback = False
@@ -123,20 +122,20 @@ class yangTools(object):
         yl.debug('nukeAddNodeCallback')
         if '*' not in nuke.onCreates or (self.nukeCreateNodeCallback, (), {}, None) not in nuke.onCreates['*']:
             nuke.addOnCreate(self.nukeCreateNodeCallback)
-        if '*' not in nuke.onDestroys or (self.nukeDestroyNodeCallback, (), {}, None) not in nuke.onDestroys['*']:
-            nuke.addOnDestroy(self.nukeDestroyNodeCallback)
         if '*' not in nuke.knobChangeds or (self.nukeSelectionCallback, (), {}, None) not in nuke.knobChangeds['*']:
             nuke.addKnobChanged(self.nukeSelectionCallback)
+        if '*' not in nuke.onDestroys or (self.nukeDestroyNodeCallback, (), {}, None) not in nuke.onDestroys['*']:
+            nuke.addOnDestroy(self.nukeDestroyNodeCallback)
 
     def removeNukeCallback(self):
         '''remove method from Nuke callback list'''
         yl.debug('nukeDestroyNodeCallback')
         if '*' in nuke.onCreates and (self.nukeCreateNodeCallback, (), {}, None) in nuke.onCreates['*']:
             nuke.removeOnCreate(self.nukeCreateNodeCallback)
-        if '*' in nuke.onDestroys and (self.nukeDestroyNodeCallback, (), {}, None) in nuke.onDestroys['*']:
-            nuke.removeOnDestroy(self.nukeDestroyNodeCallback)
         if '*' in nuke.knobChangeds or (self.nukeSelectionCallback, (), {}, None) in nuke.knobChangeds['*']:
             nuke.removeKnobChanged(self.nukeSelectionCallback)
+        if '*' in nuke.onDestroys and (self.nukeDestroyNodeCallback, (), {}, None) in nuke.onDestroys['*']:
+            nuke.removeOnDestroy(self.nukeDestroyNodeCallback)
 
     def ytNodeSelectionCallback(self, pNode, caller):
         '''the callback that called while selecting node in nuke or in treeView'''

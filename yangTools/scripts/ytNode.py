@@ -3,7 +3,7 @@
 # File              : scriptsytNode.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 04.03.2019
-# Last Modified Date: 13.03.2019
+# Last Modified Date: 14.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 from ytLoggingSettings import yl
@@ -76,8 +76,8 @@ class ytNode(object):
 
     def removeChild(self, child, caller=ytVariables.ytCaller.yt_caller_gui):
         if child in self._children:
-            child.setParent(None)
             self.callback(child, 5, caller)
+            child.setParent(None)
             self._children.remove(child)
             return True
         else:
@@ -126,7 +126,7 @@ class ytNode(object):
         if self._parent is not None and self in self._parent.getChildren():
             return self._parent.getChildren().index(self)
         else:
-            return 0
+            yl.error('node: %s should be deleted.')
 
     def getFullIndex(self):
         yl.debug('get full index')
