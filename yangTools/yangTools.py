@@ -14,6 +14,7 @@ from ytWidgets import ytOutlineWidget
 from ytLoggingSettings import yl, logging
 import ytPlugins
 from plugin import *
+import threading
 
 
 class yangTools(object):
@@ -56,17 +57,17 @@ class yangTools(object):
                 break
         return path
 
-    def getNodeTree(self, space=None):
-        yl.debug('get node tree')
-        if space is None:
-            space = ytNode.ytNode('root', nuke.root())
-        ns = nuke.toNode(space.getPath()).nodes()
-        if len(ns) > 0:
-            for n in ns:
-                pn = ytNode.ytNode(n.name(), n, space)
-                pn.setSelection(n['selected'].value(), ytVariables.ytCaller.yt_caller_nuke)
-                if n.Class() == 'Group':
-                    self.getNodeTree(pn)
+    #  def getNodeTree(self, space=None):
+    #      yl.debug('get node tree')
+    #      if space is None:
+    #          space = ytNode.ytNode('root', nuke.root())
+    #      ns = nuke.toNode(space.getPath()).nodes()
+    #      if len(ns) > 0:
+    #          for n in ns:
+    #              pn = ytNode.ytNode(n.name(), n, space)
+    #              pn.setSelection(n['selected'].value(), ytVariables.ytCaller.yt_caller_nuke)
+    #              if n.Class() == 'Group':
+    #                  self.getNodeTree(pn)
 
     def printNodeTree(self, space=None, level=0):
         yl.debug('print node tree')
@@ -101,7 +102,9 @@ class yangTools(object):
         yl.debug('nukeDestroyNodeCallback begin')
         node = nuke.thisNode()
         yn = self.getPkgNodeByPath(node.fullName())
-        yn.getParent().removeChild(yn)
+        parent = yn.getParent()
+        if parent:
+            yn.getParent().removeChild(yn)
         yl.debug('nukeDestroyNodeCallback end')
 
     def nukeSelectionCallback(self):
@@ -140,11 +143,11 @@ class yangTools(object):
     def ytNodeSelectionCallback(self, pNode, caller):
         '''the callback that called while selecting node in nuke or in treeView'''
         if caller == ytVariables.ytCaller.yt_caller_gui:
-            yl.debug('call ytNodeSelectionCallback to select node in nuke')
+            yl.debug('call ytNodeSelectionCallback to select node %s in nuke' % pNode.getName())
             ytVariables.ytCaller.yt_caller_isGuiCallback = True
             pNode.getNode().setSelected(pNode.getSelection())
         elif caller == ytVariables.ytCaller.yt_caller_nuke:
-            yl.debug('call ytNodeSelectionCallback to select node in treeView')
+            yl.debug('call ytNodeSelectionCallback to select node %s in treeView' % pNode.getName())
             modelIndex = self.outlineGui.outlineTreeView.model().getIndexFromNode(pNode)
             selected = self.outlineGui.outlineTreeView.selectionModel().isSelected(modelIndex)
             if not pNode.getSelection() is selected:
@@ -206,8 +209,9 @@ class yangTools(object):
         yl.debug('show yangTools')
         if not self.isShow:
             self.addNukeCallback()
-            self.getNodeTree(self.rootNode)
             self.outlineGui.show()
+            t= getNodeTreeThread(self.rootNode)
+            t.start()
             self.isShow = True
 
     def stop(self):
@@ -255,3 +259,24 @@ class yangTools(object):
                     w = pw
                 else:
                     return None
+
+class getNodeTreeThread(threading.Thread):
+    def __init__(self, space=None):
+        super(getNodeTreeThread, self).__init__()
+        self.space = space
+
+    def run(self):
+        yl.debug('start get node tree thread')
+        self.getNodeTree(self.space)
+
+    def getNodeTree(self, space=None):
+        if space is None:
+            space = ytNode.ytNode('root', nuke.root())
+        yl.debug('get node tree in space: %s' % space.getName())
+        ns = nuke.toNode(space.getPath()).nodes()
+        if len(ns) > 0:
+            for n in ns:
+                pn = ytNode.ytNode(n.name(), n, space)
+                pn.setSelection(n['selected'].value(), ytVariables.ytCaller.yt_caller_nuke)
+                if n.Class() == 'Group':
+                    self.getNodeTree(pn)

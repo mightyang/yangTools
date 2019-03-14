@@ -127,6 +127,7 @@ class ytNode(object):
             return self._parent.getChildren().index(self)
         else:
             yl.error('node: %s should be deleted.')
+            #  return 0
 
     def getFullIndex(self):
         yl.debug('get full index')
@@ -138,6 +139,7 @@ class ytNode(object):
                 child = child.getParent()
                 if child.getParent() is None:
                     return fullIndex
+        return [0]
 
     def callback(self, item, n, caller):
         '''

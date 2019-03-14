@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File              : ytSequence.py
+# File              : scriptsytSequence.py
 # Author            : yang <mightyang@hotmail.com>
 # Date              : 10.03.2019
-# Last Modified Date: 12.03.2019
+# Last Modified Date: 14.03.2019
 # Last Modified By  : yang <mightyang@hotmail.com>
 
 #  from ytLoggingSettings import yl
@@ -172,7 +172,7 @@ class sequence():
         '''
         move file
         if newName is None, keep name as source
-        if newDirname is None, just like rename
+        if newDirname is None, like rename
         if replace is True, if destination path is exists, remove it, than move.
         '''
         # newName analize
@@ -197,15 +197,15 @@ class sequence():
                             except Exception, e:
                                 yl.error(e.message)
                         else:
-                            yl.warning('rename failed, destination is exists, pass')
+                            yl.warning('move failed, destination is exists, pass')
                             continue
                     try:
                         os.rename(os.path.join(dirname, fileName), os.path.join(newDirname, newName))
                     except Exception, e:
                         yl.error(e.message)
-                    yl.debug('rename file: {} => {}'.format(fileName, newName))
+                    yl.debug('move file: {} => {}'.format(fileName, newName))
                 else:
-                    yl.warning('rename failed, destination name is the same as source name')
+                    yl.warning('move failed, destination name is the same as source name')
         else:
             yl.error('newName format error, for example: abc.###.dpx, abc.%05d.dpx')
 
@@ -214,7 +214,7 @@ class sequence():
         '''
         copy file
         if newName is None, keep name as source
-        if newDirname is None, just like rename
+        if newDirname is None, copy to source path, so newName must be different with source name.
         if replace is True, if destination path is exists, remove it, than move.
         '''
         # newName analize

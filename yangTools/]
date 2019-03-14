@@ -12,7 +12,6 @@ import sys
 import nuke
 import ytPlugin
 import ytPlugins
-import Queue
 from ytLoggingSettings import yl, logging
 
 if nuke.NUKE_VERSION_MAJOR <= 10:
@@ -118,14 +117,13 @@ class ytNodeModel(QtCore.QAbstractItemModel):
             return self.root
 
     def getIndexFromNode(self, pNode):
-        yl.debug('get index from node: %s' % pNode.getName())
+        yl.debug('get index from node')
         pNodeFullIndex = pNode.getFullIndex()
-        yl.debug('get full index: %s' % str(pNodeFullIndex))
         modelIndex = QtCore.QModelIndex()
         if pNodeFullIndex is not None:
             for i in pNodeFullIndex:
                 modelIndex = self.index(i, 0, modelIndex)
-        yl.debug('get index: %d' % modelIndex.row())
+        yl.debug('get index at: %d', % modelIndex.row())
         return modelIndex
 
     def setHeader(self, header):
@@ -133,17 +131,17 @@ class ytNodeModel(QtCore.QAbstractItemModel):
             self._header = header
 
     def createNode(self, node, caller):
-        yl.debug('create node: %s in treeview' % node.getName())
+        yl.debug('create node in treeview')
         parent = node.getParent()
         if parent is not None:
-            #  yl.debug('parent is %s' % parent.getName())
+            yl.debug('parent is %s' % parent.getName())
             parentIndex = self.getIndexFromNode(parent)
             #  yl.debug('parent index is %s' % parentIndex.row())
             i = node.getIndex()
             #  selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
             self.beginInsertRows(parentIndex, i, i)
             if parentIndex.isValid():
-                yl.debug('insert index: %d' % i)
+                #  yl.debug('insert index: %d' % i)
                 self.insertRow(i, parentIndex)
             else:
                 self.insertRow(i, QtCore.QModelIndex())
@@ -151,7 +149,7 @@ class ytNodeModel(QtCore.QAbstractItemModel):
             #  self._parent.selectionModel().selection().merge(selection, QtCore.QItemSelectionModel.Select)
 
     def deleteNode(self, node, caller):
-        yl.debug('treeview delete node: %s' % node.getName())
+        yl.debug('treeview delete node')
         index = self.getIndexFromNode(node)
         #  selection = QtCore.QItemSelection(self._parent.selectionModel().selection())
         self.beginRemoveRows(index.parent(), index.row(), index.row())
@@ -179,25 +177,15 @@ class ytTreeView(QtGuiWidgets.QTreeView):
 class ytStreamHandler(logging.StreamHandler):
     def __init__(self, widget=None):
         super(ytStreamHandler, self).__init__()
-        self.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(thread)d %(filename)s %(funcName)s[%(lineno)d]: %(message)s'))
+        self.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(filename)s %(funcName)s[%(lineno)d]: %(message)s'))
         self.widget = widget
-        self.queue = Queue.Queue()
-        self.isSend = False
 
     def emit(self, record):
         msg = self.format(record)
-        self.queue.put(msg)
-        self.sendToWidget()
-
-    def sendToWidget(self):
-        if not self.isSend:
-            self.isSend = True
-            while not self.queue.empty():
-                if self.widget:
-                    self.widget.append(self.queue.get())
-                else:
-                    sys.stdout(self.queue.get())
-            self.isSend = False
+        if self.widget:
+            self.widget.append(msg.rstrip('\n'))
+        else:
+            sys.stdout(msg.rstrip('\n'))
 
 
 class ytLogWidget(QtGuiWidgets.QWidget):
